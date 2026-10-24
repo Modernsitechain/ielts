@@ -1,0 +1,17 @@
+{
+  "name": "ielts-mock",
+  "private": true,
+  "packageManager": "pnpm@12.15.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "turbo": "^2.11.10",
+    "typescript": "^7.0.2"
+  }
+}
