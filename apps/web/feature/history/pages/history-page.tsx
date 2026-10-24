@@ -7,11 +7,11 @@ export default async function HistoryPage() {
   const attempts = await listAttempts();
 
   return (
-    <section className="space-y-6">
-      <h1 className="text-2xl font-bold">Riwayat tes</h1>
+    <section className="mx-auto w-full max-w-5xl space-y-6 px-4 py-10">
+      <h1 className="text-2xl font-bold">Test history</h1>
 
       {attempts.length === 0 ? (
-        <p className="text-slate-600">Belum ada tes yang dikerjakan.</p>
+        <p className="text-slate-600">You haven't taken any tests yet.</p>
       ) : (
         <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
           {attempts.map((attempt) => (

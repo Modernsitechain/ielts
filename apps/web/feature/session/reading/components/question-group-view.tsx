@@ -63,7 +63,7 @@ export function QuestionGroupView({
               autoComplete="off"
               spellCheck={false}
               onChange={(event) => onAnswer(question.id, event.target.value)}
-              className="mx-1 w-40 rounded border border-slate-400 px-2 py-0.5 focus:border-blue-600 focus:outline-none"
+              className="mx-1 w-44 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-sm shadow-xs transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
             />
             {after}
           </p>
@@ -76,33 +76,37 @@ export function QuestionGroupView({
     }
   };
 
-  // Soal pilihan menampilkan prompt di atas opsi; soal isian menaruh
-  // input di dalam kalimat prompt.
+  // Choice questions show the prompt above the options; completion questions
+  // put the input inside the prompt sentence.
   const showPrompt =
     group.payload.type === "true_false_not_given" ||
     group.payload.type === "multiple_choice_single";
 
   return (
     <section className="space-y-4">
-      <header>
-        <h3 className="font-bold">
+      <header className="rounded-xl border border-slate-200 bg-white p-4">
+        <h3 className="font-semibold">
           Questions {group.numberFrom}–{group.numberTo}
         </h3>
-        <p className="mt-1 text-sm text-slate-700">{group.instructions}</p>
+        <p className="mt-1 text-sm leading-relaxed text-slate-600">{group.instructions}</p>
       </header>
 
-      <ol className="space-y-3">
+      <ol className="space-y-2">
         {group.questions.map((question) => (
           <li
             key={question.id}
             id={`question-${question.number}`}
             onFocus={() => onFocusQuestion(question.number)}
             onClick={() => onFocusQuestion(question.number)}
-            className={`flex gap-3 rounded-md p-2 ${
-              question.number === currentNumber ? "bg-blue-50 ring-1 ring-blue-300" : ""
+            className={`flex gap-3 rounded-xl p-3 transition ${
+              question.number === currentNumber
+                ? "bg-indigo-50/70 ring-1 ring-indigo-200"
+                : "hover:bg-white"
             }`}
           >
-            <span className="w-6 shrink-0 font-bold">{question.number}</span>
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-900 text-xs font-semibold text-white">
+              {question.number}
+            </span>
             <div className="flex-1 space-y-2">
               {showPrompt && <p>{question.prompt}</p>}
               {renderInput(question)}
@@ -130,9 +134,12 @@ function ChoiceList({
   onAnswer: (questionId: string, value: string) => void;
 }) {
   return (
-    <div className="space-y-1">
+    <div className="grid gap-1.5">
       {options.map((option) => (
-        <label key={option.key} className="flex cursor-pointer items-start gap-2">
+        <label
+          key={option.key}
+          className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm transition hover:border-slate-300 has-checked:border-indigo-500 has-checked:bg-indigo-50"
+        >
           <input
             type="radio"
             name={`question-${question.id}`}
@@ -140,7 +147,7 @@ function ChoiceList({
             checked={value === option.key}
             disabled={disabled}
             onChange={() => onAnswer(question.id, option.key)}
-            className="mt-1"
+            className="mt-0.5 accent-indigo-600"
           />
           <span>
             {showKey && <span className="mr-2 font-semibold">{option.key}</span>}

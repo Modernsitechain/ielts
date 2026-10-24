@@ -7,8 +7,8 @@ export const SKILL_LABEL: Record<Skill, string> = {
 };
 
 export const MODE_LABEL: Record<AttemptMode, string> = {
-  exam: "Mode Ujian",
-  practice: "Mode Latihan",
+  exam: "Exam mode",
+  practice: "Practice mode",
 };
 
 export const QUESTION_TYPE_LABEL: Record<QuestionType, string> = {
@@ -18,7 +18,7 @@ export const QUESTION_TYPE_LABEL: Record<QuestionType, string> = {
   form_completion: "Form completion",
 };
 
-const dateFormatter = new Intl.DateTimeFormat("id-ID", {
+const dateFormatter = new Intl.DateTimeFormat("en-GB", {
   dateStyle: "medium",
   timeStyle: "short",
   timeZone: "Asia/Jakarta",

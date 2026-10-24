@@ -2,8 +2,8 @@ import "server-only";
 
 import type { TestRecord } from "@/core/models/records";
 
-// Konten orisinal untuk demo. Bukan soal resmi IELTS.
-// Versi pendek (Part 1 saja, 4 soal); audio belum ada.
+// Original demo content. Not official IELTS material.
+// Short version (Part 1 only, 4 questions); no audio yet.
 
 export const listeningDemo1: TestRecord = {
   id: "listening-demo-1",

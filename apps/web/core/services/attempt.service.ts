@@ -11,10 +11,10 @@ import type {
 import type { AttemptRecord, TestRecord } from "@/core/models/records";
 import { isAnswerCorrect, rawScoreToBand } from "./scoring";
 
-// Meniru perilaku apps/api di atas dummy data. Waktu dan penilaian
-// ditentukan di sini (sisi server), bukan dipercaya dari browser.
+// Mimics apps/api on top of dummy data. Timing and grading are decided here
+// (server side), never trusted from the browser.
 
-/** Toleransi keterlambatan jaringan saat auto-submit di detik terakhir. */
+/** Allowance for network delay when auto-submitting in the last second. */
 const DEADLINE_GRACE_MS = 30_000;
 const MAX_ANSWER_LENGTH = 200;
 
@@ -34,7 +34,7 @@ function toSession(attempt: AttemptRecord): AttemptSession {
   };
 }
 
-/** Input dari browser tidak dipercaya: hanya soal milik tes ini, hanya string. */
+/** Browser input is untrusted: only this test's questions, only strings. */
 function sanitizeAnswers(
   test: TestRecord,
   answers: unknown,
@@ -118,7 +118,7 @@ export async function getAttemptSession(
   return attempt ? toSession(attempt) : null;
 }
 
-/** Autosave. Ditolak jika attempt sudah submit atau waktunya habis. */
+/** Autosave. Rejected if the attempt is already submitted or time is up. */
 export async function saveAnswers(
   attemptId: string,
   answers: unknown,
@@ -133,8 +133,8 @@ export async function saveAnswers(
 }
 
 /**
- * Submit. Jika waktu sudah lewat, jawaban dari browser diabaikan dan yang
- * dinilai adalah jawaban autosave terakhir sebelum batas waktu.
+ * Submit. If time is up, answers from the browser are ignored and the last
+ * autosave before the deadline is graded instead.
  */
 export async function submitAttempt(
   attemptId: string,

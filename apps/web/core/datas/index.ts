@@ -4,7 +4,7 @@ import type { TestRecord } from "@/core/models/records";
 import { listeningDemo1 } from "./listening-demo-1";
 import { readingDemo1 } from "./reading-demo-1";
 
-// Dummy data pengganti database. Hanya boleh dibaca oleh core/services.
+// Dummy data standing in for the database. Only core/services may read it.
 
 export const tests: TestRecord[] = [readingDemo1, listeningDemo1];
 

@@ -14,10 +14,10 @@ export default async function AttemptResultPage({
   if (!result) notFound();
 
   return (
-    <section className="space-y-6">
+    <section className="mx-auto w-full max-w-5xl space-y-6 px-4 py-10">
       <div>
         <Link href="/history" className="text-sm text-slate-500 hover:text-slate-900">
-          ← Riwayat
+          ← Test history
         </Link>
         <h1 className="mt-2 text-2xl font-bold">{result.testTitle}</h1>
         <p className="mt-1 text-slate-600">
@@ -37,7 +37,7 @@ export default async function AttemptResultPage({
           <p className="text-3xl font-bold">{formatBand(result.band)}</p>
           {result.band === null && (
             <p className="mt-1 text-xs text-slate-500">
-              Band hanya dihitung untuk tes lengkap 40 soal.
+              Bands are only calculated for full 40-question tests.
             </p>
           )}
         </div>
@@ -48,9 +48,9 @@ export default async function AttemptResultPage({
           <thead className="border-b border-slate-200 text-slate-500">
             <tr>
               <th className="p-3">No.</th>
-              <th className="p-3">Soal</th>
-              <th className="p-3">Jawaban kamu</th>
-              <th className="p-3">Jawaban benar</th>
+              <th className="p-3">Question</th>
+              <th className="p-3">Your answer</th>
+              <th className="p-3">Correct answer</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -64,7 +64,7 @@ export default async function AttemptResultPage({
                   }
                 >
                   {item.isCorrect ? "✓ " : "✗ "}
-                  {item.given ?? "(kosong)"}
+                  {item.given ?? "(blank)"}
                 </td>
                 <td className="p-3">{item.accepted.join(" / ")}</td>
               </tr>

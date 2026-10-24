@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Faint grid used behind hero sections. */
+@utility bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(15 23 42 / 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(15 23 42 / 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+}

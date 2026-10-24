@@ -1,5 +1,6 @@
 "use client";
 
+import { Clock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 function formatRemaining(ms: number): string {
@@ -10,8 +11,8 @@ function formatRemaining(ms: number): string {
 }
 
 /**
- * Hitung mundur ke `endsAt` dari server. Hanya tampilan: batas waktu yang
- * berlaku tetap dicek di server saat submit.
+ * Counts down to the server's `endsAt`. Display only: the deadline that
+ * counts is still checked on the server at submission.
  */
 export function Timer({
   endsAt,
@@ -20,7 +21,7 @@ export function Timer({
   endsAt: string;
   onExpire: () => void;
 }) {
-  // Null sampai mount, supaya render server & browser tidak berbeda.
+  // Null until mounted, so the server and browser renders match.
   const [remaining, setRemaining] = useState<number | null>(null);
   const onExpireRef = useRef(onExpire);
   const expiredRef = useRef(false);
@@ -48,8 +49,13 @@ export function Timer({
   return (
     <span
       role="timer"
-      className={`font-mono text-lg font-semibold tabular-nums ${isLow ? "text-red-600" : ""}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-sm font-semibold tabular-nums ring-1 ${
+        isLow
+          ? "animate-pulse bg-red-50 text-red-700 ring-red-200"
+          : "bg-slate-50 text-slate-800 ring-slate-200"
+      }`}
     >
+      <Clock className="h-4 w-4" aria-hidden />
       {remaining === null ? "--:--" : formatRemaining(remaining)}
     </span>
   );

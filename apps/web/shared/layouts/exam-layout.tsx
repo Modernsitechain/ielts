@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-/** Layout sesi ujian: layar penuh, tanpa header/footer situs. */
+/** Exam session layout: full screen, without the site header/footer. */
 export function ExamLayout({ children }: { children: ReactNode }) {
   return <div className="h-screen overflow-hidden bg-white">{children}</div>;
 }

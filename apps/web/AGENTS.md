@@ -111,8 +111,24 @@ Feature saat ini: `home`, `catalog`, `history`, `session` (sub: `reading`,
 - Halaman: `export default`. Komponen lain: named export.
 - `"use client"` hanya di komponen yang butuh state/event browser; halaman
   tetap Server Component.
-- Styling dengan class Tailwind; teks UI berbahasa Indonesia, konten soal
-  berbahasa Inggris.
+- Styling dengan class Tailwind (v4). Font: Geist (`next/font`).
+- Icon: hanya `lucide-react`. Icon dekoratif diberi `aria-hidden`; tombol
+  yang hanya berisi icon wajib punya `aria-label`.
+- `SiteLayout` tidak membatasi lebar; setiap halaman mengatur container-nya
+  sendiri (`mx-auto max-w-5xl px-4 py-10`), supaya landing page bisa full-width.
+- Aksen AI (gradient indigo → violet → fuchsia, icon `Sparkles`) hanya untuk
+  halaman marketing. Halaman ujian tetap netral & semirip mungkin dengan
+  IELTS on computer. Fitur AI yang belum ada wajib diberi label "Coming soon".
+
+## Bahasa (wajib)
+
+- Semua yang ada di dalam aplikasi ditulis dalam **bahasa Inggris**: teks UI,
+  pesan error, metadata, konten soal, nama variabel, dan comment kode.
+- Pakai ejaan British (practise, modelled, catalogue) agar konsisten dengan
+  IELTS. Format tanggal `en-GB`, zona waktu `Asia/Jakarta`.
+- Diskusi dan prompt dengan developer boleh berbahasa Indonesia; itu tidak
+  mengubah bahasa aplikasi.
+- Dokumen di `docs/` dan file panduan ini tetap berbahasa Indonesia.
 - TypeScript strict: hindari `any`, tangani semua tipe soal di `switch`
   dengan cek `never`.
 

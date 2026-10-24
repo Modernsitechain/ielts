@@ -7,8 +7,8 @@ export default async function CatalogPage() {
   const tests = await listTests();
 
   return (
-    <section className="space-y-6">
-      <h1 className="text-2xl font-bold">Katalog tes</h1>
+    <section className="mx-auto w-full max-w-5xl space-y-6 px-4 py-10">
+      <h1 className="text-2xl font-bold">Tests</h1>
 
       <ul className="grid gap-4 sm:grid-cols-2">
         {tests.map((test) => (
@@ -28,12 +28,12 @@ export default async function CatalogPage() {
                       : "rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-800"
                   }
                 >
-                  {test.isFree ? "Gratis" : "Berbayar"}
+                  {test.isFree ? "Free" : "Paid"}
                 </span>
               </div>
               <h2 className="mt-2 font-semibold">{test.title}</h2>
               <p className="mt-1 text-sm text-slate-600">
-                {test.questionCount} soal · {test.durationMinutes} menit
+                {test.questionCount} questions · {test.durationMinutes} minutes
               </p>
             </Link>
           </li>

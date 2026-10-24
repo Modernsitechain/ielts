@@ -2,10 +2,10 @@ import "server-only";
 
 import type { GroupPayload, Skill } from "@/core/models/test";
 
-// Fungsi penilaian murni (tanpa framework, tanpa database).
-// Pada Fase 2 dipindah ke packages/question-schema dan dipanggil oleh apps/api.
+// Pure grading functions (no framework, no database).
+// Will move to packages/question-schema in Phase 2 and be called by apps/api.
 
-/** trim, lowercase, rapikan spasi ganda, buang tanda baca di ujung. */
+/** Trim, lowercase, collapse repeated spaces, strip trailing punctuation. */
 export function normalizeAnswer(value: string): string {
   return value
     .trim()
@@ -17,8 +17,8 @@ export function normalizeAnswer(value: string): string {
 const NUMBER_TOKEN = /^\d[\d,.]*$/;
 
 /**
- * Cek batas kata, misalnya "NO MORE THAN TWO WORDS AND/OR A NUMBER":
- * jika allowNumber, satu token angka tidak dihitung sebagai kata.
+ * Checks the word limit, e.g. "NO MORE THAN TWO WORDS AND/OR A NUMBER":
+ * with allowNumber, one number token doesn't count as a word.
  */
 export function withinWordLimit(
   value: string,
@@ -52,8 +52,8 @@ export function isAnswerCorrect(
   return accepted.some((a) => normalizeAnswer(a) === normalized);
 }
 
-// Perkiraan umum dari docs/ielts-domain.md. Tabel resmi bisa berbeda
-// antar tes, jadi ini konfigurasi, bukan logika.
+// General approximation from docs/ielts-domain.md. Official tables can vary
+// between tests, so this is configuration, not logic.
 type BandTable = { band: number; minRaw: number }[];
 
 const BAND_TABLES: Record<"listening" | "reading_academic", BandTable> = {
@@ -86,8 +86,8 @@ const BAND_TABLES: Record<"listening" | "reading_academic", BandTable> = {
 };
 
 /**
- * Konversi raw score ke band. Null jika tes bukan 40 soal (band tidak
- * bermakna) atau skor di bawah tabel yang tersedia.
+ * Converts a raw score to a band. Null if the test doesn't have 40 questions
+ * (the band would be meaningless) or the score is below the available table.
  */
 export function rawScoreToBand(
   skill: Skill,

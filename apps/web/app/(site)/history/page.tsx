@@ -1,4 +1,4 @@
-// Riwayat berubah setiap kali tes di-submit, jadi jangan di-render statis.
+// History changes on every submission, so don't render it statically.
 export const dynamic = "force-dynamic";
 
 export { default } from "@/feature/history/pages/history-page";

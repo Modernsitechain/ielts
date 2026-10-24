@@ -4,10 +4,10 @@ import { tests } from "@/core/datas";
 import type { TestRecord } from "@/core/models/records";
 import type { TestDetail, TestSummary } from "@/core/models/test";
 
-// Halaman hanya mengambil data lewat core/services.
-// Sekarang membaca dummy data dari core/datas. Saat apps/api (NestJS) siap,
-// isi fungsi-fungsi ini diganti dengan fetch ke API; signature tetap sama
-// sehingga halaman tidak perlu diubah.
+// Pages get data only through core/services.
+// For now this reads dummy data from core/datas. Once apps/api (NestJS) is
+// ready, these functions will fetch from the API instead; the signatures stay
+// the same, so pages don't need to change.
 
 export function countQuestions(test: TestRecord): number {
   return test.sections.reduce(
@@ -30,7 +30,7 @@ function toSummary(test: TestRecord): TestSummary {
   };
 }
 
-/** Tes untuk peserta: tanpa kunci jawaban. */
+/** Test for candidates: without the answer key. */
 function toDetail(test: TestRecord): TestDetail {
   const { answerKey: _answerKey, ...publicTest } = test;
   return { ...publicTest, questionCount: countQuestions(test) };

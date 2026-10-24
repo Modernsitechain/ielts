@@ -2,16 +2,16 @@ import type { Skill } from "./test";
 
 export type AttemptMode = "exam" | "practice";
 
-/** Attempt yang sedang dikerjakan, sesuai yang boleh dilihat peserta. */
+/** An attempt in progress, limited to what the candidate may see. */
 export type AttemptSession = {
   id: string;
   testId: string;
   mode: AttemptMode;
   startedAt: string;
-  /** Batas waktu dari server; timer di browser hanya tampilan. */
+  /** Deadline set by the server; the browser timer is display only. */
   endsAt: string;
   submittedAt: string | null;
-  /** Jawaban tersimpan terakhir per question id. */
+  /** Last saved answers per question id. */
   answers: Record<string, string>;
 };
 
@@ -24,7 +24,7 @@ export type AttemptSummary = {
   submittedAt: string;
   rawScore: number;
   totalQuestions: number;
-  /** Null jika band tidak bisa dihitung (misalnya tes demo < 40 soal). */
+  /** Null when the band can't be calculated (e.g. a demo test with < 40 questions). */
   band: number | null;
 };
 

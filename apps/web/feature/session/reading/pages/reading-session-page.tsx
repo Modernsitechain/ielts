@@ -14,7 +14,7 @@ export default async function ReadingSessionPage({
   if (!session) notFound();
   if (session.submittedAt) redirect(`/history/${session.id}`);
 
-  // getTest mengembalikan tes tanpa kunci jawaban.
+  // getTest returns the test without the answer key.
   const test = await getTest(session.testId);
   if (!test || test.skill !== "reading") notFound();
 

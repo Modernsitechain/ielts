@@ -1,9 +1,9 @@
-// Model tes yang dilihat oleh peserta. Mengikuti sketsa model di
-// docs/project-brief.md; akan dipindah ke packages/question-schema (Zod)
-// pada Fase 2.
+// Test models as seen by candidates. Follows the data model sketch in
+// docs/project-brief.md; will move to packages/question-schema (Zod) in
+// Phase 2.
 //
-// Kunci jawaban SENGAJA tidak ada di sini: tes yang dikirim ke peserta
-// tidak boleh membawa jawaban sebelum submit (lihat records.ts).
+// Answer keys are DELIBERATELY absent here: tests sent to candidates must
+// not carry answers before submission (see records.ts).
 
 export type Skill = "reading" | "listening";
 export type TestModule = "academic" | null;
@@ -25,13 +25,13 @@ export type ChoiceOption = {
 
 export type Question = {
   id: string;
-  /** Nomor global 1–40 dalam satu tes. */
+  /** Global number 1–40 within a test. */
   number: number;
   prompt: string;
   options: ChoiceOption[] | null;
 };
 
-/** Data level group, dibedakan berdasarkan tipe soal. */
+/** Group-level data, discriminated by question type. */
 export type GroupPayload =
   | { type: "multiple_choice_single" }
   | { type: "true_false_not_given" }
@@ -55,9 +55,9 @@ export type Section = {
   order: number;
   kind: "passage" | "listening_part";
   title: string;
-  /** Teks passage (Reading). Null untuk Listening. */
+  /** Passage text (Reading). Null for Listening. */
   content: string | null;
-  /** URL audio (Listening). Null untuk Reading atau jika belum diunggah. */
+  /** Audio URL (Listening). Null for Reading or when not uploaded yet. */
   audioUrl: string | null;
   groups: QuestionGroup[];
 };

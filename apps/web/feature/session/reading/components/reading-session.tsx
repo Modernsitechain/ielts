@@ -1,5 +1,6 @@
 "use client";
 
+import { CircleAlert, CircleCheck, GraduationCap, LoaderCircle, Send } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 import type { AttemptSession } from "@/core/models/attempt";
@@ -21,7 +22,7 @@ export function ReadingSession({
   test: TestDetail;
   session: AttemptSession;
 }) {
-  // Urutan soal 1..N beserta passage tempatnya berada.
+  // Questions 1..N, each with the passage it belongs to.
   const questions = useMemo(
     () =>
       test.sections.flatMap((section, sectionIndex) =>
@@ -62,7 +63,7 @@ export function ReadingSession({
     [questions, answers],
   );
 
-  // Autosave ke server setelah jawaban berhenti berubah sebentar.
+  // Autosave to the server once answers stop changing for a moment.
   useEffect(() => {
     if (answers === session.answers) return;
     setSaveState("saving");
@@ -73,7 +74,7 @@ export function ReadingSession({
     return () => clearTimeout(timeout);
   }, [answers, session.id, session.answers]);
 
-  // Bawa soal yang aktif ke area terlihat (misalnya setelah klik di nav).
+  // Scroll the active question into view (e.g. after clicking in the nav).
   useEffect(() => {
     document
       .getElementById(`question-${currentNumber}`)
@@ -95,8 +96,8 @@ export function ReadingSession({
     const unanswered = questions.length - answeredNumbers.size;
     const message =
       unanswered > 0
-        ? `Masih ada ${unanswered} soal yang belum dijawab. Submit sekarang?`
-        : "Submit jawaban sekarang? Jawaban tidak bisa diubah setelah submit.";
+        ? `You have ${unanswered} unanswered question(s). Submit now?`
+        : "Submit your answers now? You won't be able to change them afterwards.";
     if (window.confirm(message)) submit();
   };
 
@@ -120,33 +121,50 @@ export function ReadingSession({
 
   if (!section) return null;
 
+  const partNumbers = parts[sectionIndex]?.numbers ?? [];
+
   return (
     <div className="flex h-screen flex-col">
-      <header className="flex items-center justify-between gap-4 border-b border-slate-300 bg-slate-100 px-4 py-2">
-        <h1 className="truncate font-semibold">{test.title}</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-xs text-slate-500" aria-live="polite">
-            {saveState === "saving" && "Menyimpan…"}
-            {saveState === "saved" && "Tersimpan"}
-            {saveState === "error" && "Gagal menyimpan"}
-          </span>
+      <header className="flex h-14 shrink-0 items-center gap-4 border-b border-slate-200 bg-white px-4">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white">
+          <GraduationCap className="h-4.5 w-4.5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs text-slate-500">Academic Reading</p>
+          <h1 className="truncate text-sm font-semibold">{test.title}</h1>
+        </div>
+
+        <div className="ml-auto flex items-center gap-3">
+          <SaveIndicator state={saveState} />
           <Timer endsAt={session.endsAt} onExpire={submit} />
           <button
             type="button"
             onClick={handleSubmitClick}
             disabled={isSubmitting}
-            className="rounded-md bg-slate-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-50"
           >
-            {isSubmitting ? "Mengirim…" : "Submit"}
+            {isSubmitting ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden />
+            ) : (
+              <Send className="h-4 w-4" aria-hidden />
+            )}
+            {isSubmitting ? "Submitting…" : "Submit"}
           </button>
         </div>
       </header>
 
+      <div className="shrink-0 border-b border-slate-200 bg-slate-50 px-6 py-2.5">
+        <p className="text-sm font-semibold">Part {sectionIndex + 1}</p>
+        <p className="text-sm text-slate-600">
+          Read the text and answer questions {partNumbers[0]}–{partNumbers.at(-1)}.
+        </p>
+      </div>
+
       <div className="grid min-h-0 flex-1 grid-cols-2">
-        <div className="overflow-y-auto border-r border-slate-300 p-6">
+        <div className="overflow-y-auto border-r border-slate-200 bg-white px-8 py-8">
           <Passage section={section} />
         </div>
-        <div className="space-y-8 overflow-y-auto p-6">
+        <div className="space-y-8 overflow-y-auto bg-slate-50/60 px-6 py-8">
           {section.groups.map((group) => (
             <QuestionGroupView
               key={group.id}
@@ -172,5 +190,33 @@ export function ReadingSession({
         onToggleFlag={toggleFlag}
       />
     </div>
+  );
+}
+
+function SaveIndicator({ state }: { state: SaveState }) {
+  return (
+    <span
+      className="hidden items-center gap-1 text-xs text-slate-500 sm:inline-flex"
+      aria-live="polite"
+    >
+      {state === "saving" && (
+        <>
+          <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden />
+          Saving…
+        </>
+      )}
+      {state === "saved" && (
+        <>
+          <CircleCheck className="h-3.5 w-3.5 text-emerald-600" aria-hidden />
+          Saved
+        </>
+      )}
+      {state === "error" && (
+        <span className="inline-flex items-center gap-1 text-red-600">
+          <CircleAlert className="h-3.5 w-3.5" aria-hidden />
+          Couldn&apos;t save
+        </span>
+      )}
+    </span>
   );
 }

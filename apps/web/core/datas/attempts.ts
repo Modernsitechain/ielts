@@ -19,15 +19,15 @@ const seed: AttemptRecord[] = [
       "r1-q6": "A",
       "r1-q7": "50000",
       "r1-q8": "Green Roofs",
-      // Melebihi batas dua kata → dinilai salah.
+      // Exceeds the two-word limit, so it's marked wrong.
       "r1-q9": "native flowering plants",
     },
   },
 ];
 
-// Attempt baru disimpan di memori server (pengganti database), jadi hilang
-// saat server di-restart. Disimpan di globalThis agar tidak ter-reset oleh
-// hot reload saat development.
+// New attempts live in server memory (standing in for a database), so they
+// are lost when the server restarts. Kept on globalThis so hot reload during
+// development doesn't reset them.
 const store = globalThis as typeof globalThis & {
   __ieltsMockAttempts?: AttemptRecord[];
 };

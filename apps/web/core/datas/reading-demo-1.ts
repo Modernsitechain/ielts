@@ -2,8 +2,8 @@ import "server-only";
 
 import type { TestRecord } from "@/core/models/records";
 
-// Konten orisinal untuk demo. Bukan soal resmi IELTS.
-// Versi pendek (9 soal) — tes sungguhan berisi 3 passage / 40 soal.
+// Original demo content. Not official IELTS material.
+// Short version (9 questions); a real test has 3 passages / 40 questions.
 
 const passage = `A  Twenty years ago, keeping bees on a city rooftop would have struck most planners as eccentric, if not dangerous. Today, cities from London to Jakarta host thousands of registered hives, many of them on hotels, offices and schools. Supporters argue that the trend reconnects city dwellers with food production and raises awareness of the decline in pollinating insects.
 

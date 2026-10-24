@@ -12,6 +12,9 @@ Fase: 1 (Fondasi project & AI tooling) — minggu ke-1
 - Database: PostgreSQL (Supabase) + Drizzle
 - Pembayaran: Midtrans Snap, model paket akses (bukan auto-renewal dulu)
 - Soal harus orisinal; ada disclaimer tidak berafiliasi dengan IELTS
+- Bahasa: seluruh isi aplikasi (teks UI, pesan error, konten soal, comment
+  kode) dalam bahasa Inggris dengan ejaan British, walaupun diskusi/prompt
+  dalam bahasa Indonesia. Dokumen di `docs/` tetap berbahasa Indonesia.
 
 ## Keputusan yang belum diambil
 - Library auth (Better Auth vs Supabase Auth)
@@ -41,6 +44,12 @@ Fase: 1 (Fondasi project & AI tooling) — minggu ke-1
   submit → penilaian di server → halaman hasil. Attempt disimpan di memori
   server (hilang saat restart). Belum: highlight & catatan, pengaturan font/
   kontras, flag belum tersimpan, sesi Listening, pengecekan paket berbayar.
+- [2026-10-24] Seluruh teks UI & comment di `apps/web` diubah ke bahasa
+  Inggris (British). Aturan bahasa dicatat di keputusan & `apps/web/AGENTS.md`.
+- [2026-10-24] Redesign landing page (hero + mock-up layar ujian, fitur,
+  cara kerja, teaser AI study coach "coming soon", CTA) & polish UI halaman
+  ujian. Icon pakai `lucide-react`, font Geist. Landing menyebut highlight &
+  catatan, padahal fitur itu belum dibuat.
 
 ## Yang masih bingung
 <!-- Tulis di sini, Claude akan menjelaskan ulang -->

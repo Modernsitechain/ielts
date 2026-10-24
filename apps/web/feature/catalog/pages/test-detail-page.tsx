@@ -15,15 +15,15 @@ export default async function TestDetailPage({
   if (!test) notFound();
 
   return (
-    <section className="space-y-6">
+    <section className="mx-auto w-full max-w-5xl space-y-6 px-4 py-10">
       <div>
         <Link href="/tests" className="text-sm text-slate-500 hover:text-slate-900">
-          ← Katalog tes
+          ← All tests
         </Link>
         <h1 className="mt-2 text-2xl font-bold">{test.title}</h1>
         <p className="mt-1 text-slate-600">
-          {SKILL_LABEL[test.skill]} · {test.questionCount} soal ·{" "}
-          {test.durationMinutes} menit · {test.isFree ? "Gratis" : "Berbayar"}
+          {SKILL_LABEL[test.skill]} · {test.questionCount} questions ·{" "}
+          {test.durationMinutes} minutes · {test.isFree ? "Free" : "Paid"}
         </p>
       </div>
 
@@ -49,10 +49,10 @@ export default async function TestDetailPage({
             type="submit"
             className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
           >
-            Mulai tes
+            Start test
           </button>
           <p className="text-xs text-slate-500">
-            Mode Ujian: timer {test.durationMinutes} menit berjalan sejak tes dimulai.
+            Exam mode: the {test.durationMinutes}-minute timer starts as soon as you begin.
           </p>
         </form>
       ) : (
@@ -62,9 +62,9 @@ export default async function TestDetailPage({
             disabled
             className="cursor-not-allowed rounded-md bg-slate-300 px-4 py-2 text-sm font-medium text-slate-600"
           >
-            Mulai tes
+            Start test
           </button>
-          <p className="text-xs text-slate-500">Sesi Listening belum tersedia.</p>
+          <p className="text-xs text-slate-500">Listening sessions aren't available yet.</p>
         </div>
       )}
     </section>
