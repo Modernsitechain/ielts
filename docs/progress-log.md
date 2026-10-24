@@ -20,6 +20,10 @@ perlu diambil" di file itu.
   `.claude/skills/axl/SKILL.md`
 - Deploy: web & api (dan nanti admin) di DigitalOcean memakai Docker;
   database DigitalOcean Managed PostgreSQL. Tidak memakai Vercel
+- Environment: `local`, `development` (branch `development`), `staging`
+  (nanti), `production` (branch `main`), dibedakan dengan `APP_ENV`. Sampai
+  deploy pertama semua kerja di `main`; pindah ke `development` menunggu
+  aba-aba developer. Detail: `docs/environments.md`
 - Runtime: Node 24 LTS (`.nvmrc`); dibutuhkan Jest untuk NestJS 12 (ESM)
 - Pembayaran: Midtrans Snap, model paket akses (bukan auto-renewal dulu)
 - Soal harus orisinal; ada disclaimer tidak berafiliasi dengan IELTS
@@ -91,6 +95,11 @@ perlu diambil" di file itu.
 - [2026-10-24] Merapikan class Tailwind ke penamaan v4 (konflik `divide`/
   `border`, `rounded`→`rounded-sm`, `outline-none`→`outline-hidden`, dll.) dan
   menambah aturan "Tailwind CSS v4" di `apps/web/AGENTS.md`.
+- [2026-10-24] Menyiapkan pemisahan environment: `APP_ENV` di api & web,
+  validasi env web (Zod, `API_URL` wajib di luar local), template
+  `.env.example` / `.env.development.example` / `.env.production.example`,
+  dukungan SSL + CA untuk Managed PostgreSQL, dan `docs/environments.md`.
+  Environment terlihat di halaman `/status`.
 
 ## Yang masih bingung
 <!-- Tulis di sini, Claude akan menjelaskan ulang -->

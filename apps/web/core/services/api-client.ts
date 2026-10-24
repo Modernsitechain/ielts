@@ -1,8 +1,10 @@
 import "server-only";
 
-// Base URL of apps/api. Only used on the server (Server Components and
-// Server Actions), so the browser never talks to the API directly.
-const API_URL = process.env.API_URL ?? "http://localhost:4000";
+import { env } from "@/core/config/env";
+
+// apps/api is only called from the server (Server Components and Server
+// Actions), so the browser never talks to the API directly.
+const API_URL = env.API_URL;
 
 const REQUEST_TIMEOUT_MS = 3_000;
 

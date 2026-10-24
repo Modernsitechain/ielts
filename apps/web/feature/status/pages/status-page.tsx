@@ -1,9 +1,9 @@
 import { CircleAlert, CircleCheck, CircleHelp, type LucideIcon } from "lucide-react";
 
-import type { SystemHealth } from "@/core/models/health";
+import type { ServiceState } from "@/core/models/health";
 import { getSystemHealth } from "@/core/services/health.service";
 
-type State = SystemHealth[keyof SystemHealth];
+type State = ServiceState | "unknown";
 
 const STATE_STYLE: Record<State, { icon: LucideIcon; label: string; className: string }> = {
   up: { icon: CircleCheck, label: "Operational", className: "text-emerald-600" },
@@ -24,7 +24,13 @@ export default async function StatusPage() {
     <section className="mx-auto w-full max-w-5xl space-y-6 px-4 py-10">
       <div>
         <h1 className="text-2xl font-bold">System status</h1>
-        <p className="mt-1 text-slate-600">Checked on every page load.</p>
+        <p className="mt-1 text-slate-600">
+          Environment:{" "}
+          <span className="rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-sm text-slate-800">
+            {health.environment}
+          </span>{" "}
+          · Checked on every page load.
+        </p>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">

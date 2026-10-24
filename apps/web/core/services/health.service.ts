@@ -1,5 +1,6 @@
 import "server-only";
 
+import { env } from "@/core/config/env";
 import type { SystemHealth } from "@/core/models/health";
 import { apiFetch } from "./api-client";
 
@@ -10,8 +11,12 @@ export async function getSystemHealth(): Promise<SystemHealth> {
     const response = await apiFetch("/health");
     // The API answers 503 with the same body when the database is down.
     const body = (await response.json()) as HealthResponse;
-    return { api: "up", database: body.database === "up" ? "up" : "down" };
+    return {
+      environment: env.APP_ENV,
+      api: "up",
+      database: body.database === "up" ? "up" : "down",
+    };
   } catch {
-    return { api: "down", database: "unknown" };
+    return { environment: env.APP_ENV, api: "down", database: "unknown" };
   }
 }

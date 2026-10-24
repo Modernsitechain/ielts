@@ -100,8 +100,11 @@ apps/api/
 
 - Butuh **Node 24.9+** (lihat `.nvmrc`; jalankan `nvm use` di root repo).
   Jest butuh versi ini untuk memuat paket NestJS 12 yang berformat ESM.
-- Salin `.env.example` ke `.env` (development, DB `ielts_mock`) dan
-  `.env.test` (test, DB `ielts_mock_test`). Keduanya tidak di-commit.
+- Salin `.env.example` ke `.env` (local, DB `ielts_mock`) dan `.env.test`
+  (test, DB `ielts_mock_test`). Keduanya tidak di-commit.
+- Environment (`APP_ENV`: local/development/staging/production), branch, dan
+  semua env var dijelaskan di `docs/environments.md`. Nilai development &
+  production disimpan di DigitalOcean, bukan di file.
 - Perintah (dari folder ini): `pnpm dev` (watch, port 4000), `pnpm build`,
   `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`.
 - TypeScript 6 dipakai di app ini (sesuai template resmi NestJS 12), bukan

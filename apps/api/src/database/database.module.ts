@@ -4,6 +4,7 @@ import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
 import type { Env } from "../config/env";
+import { buildPoolConfig } from "./pool-config";
 
 /** Injection token for the Drizzle client: `@Inject(DATABASE) db: Database`. */
 export const DATABASE = Symbol("DATABASE");
@@ -22,10 +23,12 @@ export type Database = NodePgDatabase;
       provide: PG_POOL,
       inject: [ConfigService],
       useFactory: (config: ConfigService<Env, true>) =>
-        new Pool({
-          connectionString: config.get("DATABASE_URL", { infer: true }),
-          connectionTimeoutMillis: 2_000,
-        }),
+        new Pool(
+          buildPoolConfig(
+            config.get("DATABASE_URL", { infer: true }),
+            config.get("DATABASE_CA_CERT", { infer: true }),
+          ),
+        ),
     },
     {
       provide: DATABASE,

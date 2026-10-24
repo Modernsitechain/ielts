@@ -63,11 +63,12 @@ nanti tidak perlu mengubah kode. Cek harga terbaru di situs DigitalOcean.
    dipakai di staging maupun production.
 3. `.dockerignore` di root (tanpa `node_modules`, `.env*`, `dist`, `.next`,
    `.turbo`).
-4. Dukungan SSL database: Managed PostgreSQL DO mewajibkan SSL dengan CA
-   milik DO. Ubah `apps/api/src/database/database.module.ts` agar memakai
-   env opsional `DATABASE_CA_CERT`, dan tambahkan ke `src/config/env.ts`.
-5. (Opsional, untuk Droplet atau tes lokal) `docker-compose.yml`.
-6. Uji build image di lokal jika Docker tersedia.
+4. ✅ Dukungan SSL database (selesai 2026-10-24): `DATABASE_CA_CERT` di
+   `apps/api/src/config/env.ts`, logika di `src/database/pool-config.ts`.
+5. ✅ Pemisahan environment (selesai 2026-10-24): `APP_ENV`, template
+   `.env.<environment>.example`, validasi env web. Lihat `docs/environments.md`.
+6. (Opsional, untuk Droplet atau tes lokal) `docker-compose.yml`.
+7. Uji build image di lokal jika Docker tersedia.
 
 ### Tahap 1 — Database (developer, lewat dashboard DO)
 1. Buat **Managed PostgreSQL** versi 17, region **SGP1**.
@@ -110,6 +111,13 @@ nanti tidak perlu mengubah kode. Cek harga terbaru di situs DigitalOcean.
   (App Platform: **pre-deploy job**; Droplet: langkah di script deploy).
 - Tambahkan `apps/admin` sebagai container ketiga (Fase 3).
 - Pasang auth (Fase 3) sebelum app dibuka untuk umum.
+
+## Environment
+
+Deploy pertama hanya **production** (branch `main`). Environment
+**development** (branch `development`) dibuat setelah aba-aba developer,
+dengan langkah yang sama tapi app & database terpisah (database
+`ielts_mock_development`). Variabel per environment: `docs/environments.md`.
 
 ## Keputusan yang masih terbuka
 

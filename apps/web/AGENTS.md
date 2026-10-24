@@ -13,6 +13,7 @@ Backend: `apps/api/AGENTS.md`.
 apps/web/
 ├── app/                  # HANYA routing Next.js
 ├── core/
+│   ├── config/           # env.ts: validasi environment variable (Zod)
 │   ├── models/           # tipe data (re-export dari @ielts-mock/question-schema)
 │   └── services/         # satu-satunya pintu data: memanggil apps/api
 ├── feature/
@@ -39,6 +40,11 @@ apps/web/
   - `(site)` — halaman umum dengan header & footer (`SiteLayout`)
   - `(exam)` — sesi ujian layar penuh tanpa header (`ExamLayout`)
 
+### `core/config/` — environment variable
+- `env.ts` memvalidasi semua env var server (Zod) dan mengekspor `env`.
+  Baca env lewat `env`, jangan langsung dari `process.env`.
+- Menambah variabel: ikuti langkah di `docs/environments.md`.
+
 ### `core/models/` — tipe data
 - `test.ts`, `attempt.ts`: re-export tipe dari `@ielts-mock/question-schema`
   (`packages/question-schema`), satu sumber kebenaran bersama `apps/api`.
@@ -53,7 +59,8 @@ apps/web/
   - `apiJson<T>(path, { method, body })` — parse JSON; `null` untuk 404,
     `ApiError` untuk error lain.
   - `apiFetch(path, ...)` — jika butuh status HTTP mentah (contoh: autosave).
-  - Base URL dari env `API_URL` (default `http://localhost:4000`).
+  - Base URL dari `env.API_URL` (default `http://localhost:4000` hanya untuk
+    `APP_ENV=local`).
 - API hanya dipanggil dari server (Server Component/Action), tidak dari browser.
 - Semua file diawali `import "server-only";`.
 - Tidak ada logika bisnis di sini: waktu, validasi, dan penilaian dikerjakan
