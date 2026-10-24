@@ -3,6 +3,10 @@
 ## Status saat ini
 Fase: 1 (Fondasi project & AI tooling) — minggu ke-1
 
+**Lanjut dari sini:** rencana deploy web & api ke DigitalOcean (Docker)
+sudah disusun di `docs/deployment.md`, belum dikerjakan. Mulai dari bagian "Keputusan yang
+perlu diambil" di file itu.
+
 ## Keputusan yang sudah diambil
 - Produk: SaaS mock test IELTS Reading & Listening (lihat project-brief.md)
 - Struktur: monorepo Turborepo + pnpm, 3 app: `apps/web` & `apps/admin`
@@ -14,6 +18,8 @@ Fase: 1 (Fondasi project & AI tooling) — minggu ke-1
 - Commit message: `<type>: <ringkasan>` dalam bahasa Inggris; type hanya
   `feat` atau `fix`. Perintah `/axl commit` & `/axl push` di
   `.claude/skills/axl/SKILL.md`
+- Deploy: web & api (dan nanti admin) di DigitalOcean memakai Docker;
+  database DigitalOcean Managed PostgreSQL. Tidak memakai Vercel
 - Runtime: Node 24 LTS (`.nvmrc`); dibutuhkan Jest untuk NestJS 12 (ESM)
 - Pembayaran: Midtrans Snap, model paket akses (bukan auto-renewal dulu)
 - Soal harus orisinal; ada disclaimer tidak berafiliasi dengan IELTS
@@ -25,7 +31,8 @@ Fase: 1 (Fondasi project & AI tooling) — minggu ke-1
 - Hosting PostgreSQL untuk production
 - Storage audio & gambar (sebelumnya Supabase Storage; kandidat: Cloudflare R2)
 - Harga & durasi paket
-- Platform deploy `apps/api` (Railway vs Fly.io vs Render)
+- Layanan DigitalOcean untuk menjalankan container: App Platform
+  (rekomendasi) atau Droplet (lihat `docs/deployment.md`)
 
 ## Catatan per sesi
 <!-- Format: [tanggal] apa yang dikerjakan / dipelajari -->
@@ -76,6 +83,11 @@ Fase: 1 (Fondasi project & AI tooling) — minggu ke-1
   services memanggil API; `error.tsx` saat API tidak terjangkau. Unit test
   AttemptsService (deadline, sanitasi jawaban, penilaian). Belum: tabel
   database (Fase 2), auth/kepemilikan attempt (Fase 3), unit test scoring.
+- [2026-10-24] Menyusun rencana deploy `apps/api` ke DigitalOcean (App
+  Platform + Managed PostgreSQL) di `docs/deployment.md`. Ditunda; belum ada
+  perubahan kode untuk deploy.
+- [2026-10-24] Diputuskan: frontend & backend di-deploy ke DigitalOcean
+  dengan Docker, tanpa Vercel. Docs (brief, roadmap, deployment) diselaraskan.
 
 ## Yang masih bingung
 <!-- Tulis di sini, Claude akan menjelaskan ulang -->

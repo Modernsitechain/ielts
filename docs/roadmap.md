@@ -41,8 +41,9 @@ Target: MVP live dalam ±12–14 minggu (1–2 jam/hari).
 - Pembayaran: Midtrans (Snap, model paket akses; subscription menyusul)
 - Test: Jest (bawaan NestJS) untuk `apps/api` (unit & integration),
   Vitest untuk packages & frontend, Playwright (end-to-end)
-- Deploy: Vercel (web & admin) + [belum diputuskan — kandidat: Railway,
-  Fly.io, Render] (api)
+- Deploy: DigitalOcean untuk ketiga app (web, admin, api), dikemas sebagai
+  image Docker; database: DigitalOcean Managed PostgreSQL. Tidak memakai
+  Vercel. Rencana: `docs/deployment.md`
 - Observability: Sentry + PostHog
 - AI tooling: Claude Code (terminal, agent utama) + Antigravity (editor & review)
 

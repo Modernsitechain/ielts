@@ -154,8 +154,9 @@ bersama (misal "Questions 1–5, NO MORE THAN TWO WORDS"). Karena itu
 - **Auth lintas app:** tiga app harus sepakat soal identitas user
   (cookie lintas domain/subdomain, CORS, atau token). Rancang di awal,
   jangan ditambal belakangan.
-- **Deploy:** web & admin di Vercel; api butuh platform terpisah
-  untuk server yang berjalan terus (kandidat: Railway, Fly.io, Render).
+- **Deploy:** ketiga app di DigitalOcean sebagai image Docker (tidak
+  memakai Vercel); database di DigitalOcean Managed PostgreSQL. Detail di
+  `docs/deployment.md`.
 - **Highlight:** teknis paling rumit di frontend. Highlight yang
   tumpang tindih, lintas paragraf, dan tetap konsisten setelah
   refresh butuh desain penyimpanan berbasis offset yang matang.
