@@ -63,7 +63,7 @@ export function QuestionGroupView({
               autoComplete="off"
               spellCheck={false}
               onChange={(event) => onAnswer(question.id, event.target.value)}
-              className="mx-1 w-44 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-sm shadow-xs transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+              className="mx-1 w-44 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-sm shadow-xs transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-hidden"
             />
             {after}
           </p>

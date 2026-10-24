@@ -24,8 +24,8 @@ export default async function CatalogPage() {
                 <span
                   className={
                     test.isFree
-                      ? "rounded bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800"
-                      : "rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-800"
+                      ? "rounded-sm bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800"
+                      : "rounded-sm bg-amber-100 px-2 py-0.5 text-xs text-amber-800"
                   }
                 >
                   {test.isFree ? "Free" : "Paid"}

@@ -27,23 +27,25 @@ export default async function StatusPage() {
         <p className="mt-1 text-slate-600">Checked on every page load.</p>
       </div>
 
-      <ul className="divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white">
-        {rows.map(({ name, description, state }) => {
-          const { icon: Icon, label, className } = STATE_STYLE[state];
-          return (
-            <li key={name} className="flex items-center justify-between gap-4 p-4">
-              <div>
-                <p className="font-medium">{name}</p>
-                <p className="text-sm text-slate-500">{description}</p>
-              </div>
-              <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${className}`}>
-                <Icon className="h-4 w-4" aria-hidden />
-                {label}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <ul className="divide-y divide-slate-200">
+          {rows.map(({ name, description, state }) => {
+            const { icon: Icon, label, className } = STATE_STYLE[state];
+            return (
+              <li key={name} className="flex items-center justify-between gap-4 p-4">
+                <div>
+                  <p className="font-medium">{name}</p>
+                  <p className="text-sm text-slate-500">{description}</p>
+                </div>
+                <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${className}`}>
+                  <Icon className="h-4 w-4" aria-hidden />
+                  {label}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </section>
   );
 }

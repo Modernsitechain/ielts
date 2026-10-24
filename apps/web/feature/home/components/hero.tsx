@@ -13,7 +13,7 @@ export function Hero() {
 
       <div className="relative mx-auto grid max-w-6xl items-center gap-16 px-4 pt-20 pb-28 lg:grid-cols-2 lg:pt-28">
         <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-white/70 px-3 py-1 text-xs font-medium text-violet-700 shadow-sm backdrop-blur">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-white/70 px-3 py-1 text-xs font-medium text-violet-700 shadow-sm backdrop-blur-sm">
             <Sparkles className="h-3.5 w-3.5" aria-hidden />
             AI study coach coming soon
           </span>

@@ -8,7 +8,7 @@ const ANSWERED = new Set([1, 2, 3, 5]);
 export function ExamPreview() {
   return (
     <div className="relative" aria-hidden>
-      <div className="absolute -inset-4 rounded-[2rem] bg-linear-to-br from-indigo-500/20 via-violet-500/10 to-fuchsia-500/20 blur-2xl" />
+      <div className="absolute -inset-4 rounded-4xl bg-linear-to-br from-indigo-500/20 via-violet-500/10 to-fuchsia-500/20 blur-2xl" />
 
       <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-indigo-500/10">
         <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2.5">
@@ -26,22 +26,22 @@ export function ExamPreview() {
 
         <div className="grid grid-cols-2 divide-x divide-slate-200">
           <div className="space-y-2.5 p-4">
-            <div className="h-3 w-1/2 rounded bg-slate-800" />
+            <div className="h-3 w-1/2 rounded-sm bg-slate-800" />
             {PASSAGE_LINES.map((width, index) => (
-              <div key={index} className={`h-2 rounded bg-slate-200 ${width}`} />
+              <div key={index} className={`h-2 rounded-sm bg-slate-200 ${width}`} />
             ))}
             <div className="flex gap-1">
-              <div className="h-2 w-3/12 rounded bg-slate-200" />
-              <div className="h-2 w-5/12 rounded bg-amber-300" />
-              <div className="h-2 w-4/12 rounded bg-slate-200" />
+              <div className="h-2 w-3/12 rounded-sm bg-slate-200" />
+              <div className="h-2 w-5/12 rounded-sm bg-amber-300" />
+              <div className="h-2 w-4/12 rounded-sm bg-slate-200" />
             </div>
             {PASSAGE_LINES.slice(0, 3).map((width, index) => (
-              <div key={index} className={`h-2 rounded bg-slate-200 ${width}`} />
+              <div key={index} className={`h-2 rounded-sm bg-slate-200 ${width}`} />
             ))}
           </div>
 
           <div className="space-y-3 p-4">
-            <div className="h-2.5 w-2/3 rounded bg-slate-700" />
+            <div className="h-2.5 w-2/3 rounded-sm bg-slate-700" />
             {["TRUE", "FALSE", "NOT GIVEN"].map((option) => (
               <div key={option} className="flex items-center gap-2">
                 <span
@@ -52,8 +52,8 @@ export function ExamPreview() {
                 <span className="text-[10px] font-medium text-slate-600">{option}</span>
               </div>
             ))}
-            <div className="h-2 w-5/6 rounded bg-slate-200" />
-            <div className="h-6 w-28 rounded border border-slate-300" />
+            <div className="h-2 w-5/6 rounded-sm bg-slate-200" />
+            <div className="h-6 w-28 rounded-sm border border-slate-300" />
           </div>
         </div>
 
@@ -62,7 +62,7 @@ export function ExamPreview() {
           {NAV_NUMBERS.map((number) => (
             <span
               key={number}
-              className={`flex h-5 w-5 items-center justify-center rounded text-[9px] font-medium ${
+              className={`flex h-5 w-5 items-center justify-center rounded-sm text-[9px] font-medium ${
                 ANSWERED.has(number)
                   ? "bg-slate-800 text-white"
                   : "border border-slate-300 bg-white text-slate-500"
@@ -74,7 +74,7 @@ export function ExamPreview() {
         </div>
       </div>
 
-      <div className="absolute -bottom-8 -left-6 hidden w-64 rounded-xl border border-violet-200 bg-white/95 p-3 shadow-xl shadow-violet-500/10 backdrop-blur sm:block">
+      <div className="absolute -bottom-8 -left-6 hidden w-64 rounded-xl border border-violet-200 bg-white/95 p-3 shadow-xl shadow-violet-500/10 backdrop-blur-sm sm:block">
         <div className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-violet-700">
           <Sparkles className="h-3.5 w-3.5" />
           AI explanation

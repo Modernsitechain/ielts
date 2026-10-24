@@ -88,6 +88,9 @@ perlu diambil" di file itu.
   perubahan kode untuk deploy.
 - [2026-10-24] Diputuskan: frontend & backend di-deploy ke DigitalOcean
   dengan Docker, tanpa Vercel. Docs (brief, roadmap, deployment) diselaraskan.
+- [2026-10-24] Merapikan class Tailwind ke penamaan v4 (konflik `divide`/
+  `border`, `rounded`→`rounded-sm`, `outline-none`→`outline-hidden`, dll.) dan
+  menambah aturan "Tailwind CSS v4" di `apps/web/AGENTS.md`.
 
 ## Yang masih bingung
 <!-- Tulis di sini, Claude akan menjelaskan ulang -->
@@ -95,5 +98,7 @@ perlu diambil" di file itu.
 
 ## Kesalahan AI yang berulang (bahan untuk file aturan)
 <!-- Contoh: AI masih pakai `any` di handler webhook -->
+- Menulis class Tailwind dengan kebiasaan v3 / class yang saling konflik
+  (lihat aturan Tailwind v4 di `apps/web/AGENTS.md`)
 - Menyusun rencana tanpa membaca `docs/` lebih dulu → rencana melenceng
   dari arsitektur (lupa `apps/api`)

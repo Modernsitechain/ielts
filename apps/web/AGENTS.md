@@ -121,6 +121,40 @@ Feature saat ini: `home`, `catalog`, `history`, `status`, `session`
   halaman marketing. Halaman ujian tetap netral & semirip mungkin dengan
   IELTS on computer. Fitur AI yang belum ada wajib diberi label "Coming soon".
 
+## Tailwind CSS v4 (wajib)
+
+Project ini memakai **Tailwind CSS v4** (lihat `package.json`). Tulis class
+dengan nama & sintaks v4, dan targetkan **nol warning** dari Tailwind CSS
+IntelliSense di editor.
+
+- Konfigurasi ada di CSS (`app/globals.css`): token lewat `@theme`, utility
+  custom lewat `@utility`. Tidak ada `tailwind.config.js`.
+- Nama yang berubah dari v3 — selalu pakai kolom kanan:
+
+  | v3 (jangan dipakai)               | v4                              |
+  | --------------------------------- | ------------------------------- |
+  | `bg-gradient-to-r`                | `bg-linear-to-r`                |
+  | `shadow-sm` / `shadow` (ukuran v3) | `shadow-xs` / `shadow-sm`       |
+  | `rounded-sm` / `rounded`          | `rounded-xs` / `rounded-sm`     |
+  | `blur`, `backdrop-blur` (tanpa ukuran) | `blur-sm`, `backdrop-blur-sm` |
+  | `outline-none`                    | `outline-hidden`                |
+  | `ring` (3px)                      | `ring-3` (`ring` di v4 = 1px)   |
+  | `flex-shrink-0`, `flex-grow`      | `shrink-0`, `grow`              |
+  | `bg-opacity-50`, `text-opacity-*` | modifier slash: `bg-black/50`   |
+  | `!font-bold` (important di depan) | `font-bold!` (di belakang)      |
+
+  `shadow-sm` & `rounded-sm` tetap valid di v4, tapi ukurannya mengikuti
+  skala v4 — pilih berdasarkan tampilan, bukan kebiasaan v3.
+- **Tidak boleh ada dua class yang mengatur properti CSS yang sama** pada
+  satu elemen (warning `cssConflict`). Contoh: `border-slate-200` dan
+  `divide-slate-200` sama-sama mengatur `border-color` → taruh `border` di
+  elemen pembungkus dan `divide-*` di list-nya.
+- Utamakan skala bawaan daripada arbitrary value: `rounded-4xl` bukan
+  `rounded-[2rem]`, `w-160` bukan `w-[40rem]`, `h-4.5` bukan `h-[18px]`.
+  Arbitrary value (`text-[15px]`) hanya jika tidak ada padanannya.
+- Variant v4 yang boleh dipakai: `has-checked:`, `not-*:`, `inert:`, dll.;
+  ukuran shadow `shadow-xs`; gradient `bg-linear-*`, `bg-radial`, `bg-conic`.
+
 ## Bahasa (wajib)
 
 - Semua yang ada di dalam aplikasi ditulis dalam **bahasa Inggris**: teks UI,

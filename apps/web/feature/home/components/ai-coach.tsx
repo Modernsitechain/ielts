@@ -51,7 +51,7 @@ export function AiCoach() {
             </ul>
           </div>
 
-          <div className="rounded-2xl bg-white/5 p-5 ring-1 ring-white/10 backdrop-blur" aria-hidden>
+          <div className="rounded-2xl bg-white/5 p-5 ring-1 ring-white/10 backdrop-blur-sm" aria-hidden>
             <p className="text-xs text-slate-400">Question 4 · True / False / Not Given</p>
             <p className="mt-2 text-sm text-slate-200">
               The researchers were certain that competition between bees was the
