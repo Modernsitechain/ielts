@@ -1,6 +1,4 @@
-import "server-only";
-
-import type { TestRecord } from "@/core/models/records";
+import type { TestRecord } from "../test-record";
 
 // Original demo content. Not official IELTS material.
 // Short version (Part 1 only, 4 questions); no audio yet.

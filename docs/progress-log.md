@@ -9,7 +9,12 @@ Fase: 1 (Fondasi project & AI tooling) — minggu ke-1
   (Next.js, frontend murni) + `apps/api` (backend, satu-satunya akses database)
 - Backend: NestJS, termasuk test bawaannya (Jest) untuk `apps/api`
 - AI tooling: Claude Code (terminal, agent utama) + Antigravity (editor & review)
-- Database: PostgreSQL (Supabase) + Drizzle
+- Database: PostgreSQL + Drizzle; development memakai PostgreSQL lokal
+- Auth: WorkOS (AuthKit)
+- Commit message: `<type>: <ringkasan>` dalam bahasa Inggris; type hanya
+  `feat` atau `fix`. Perintah `/axl commit` & `/axl push` di
+  `.claude/skills/axl/SKILL.md`
+- Runtime: Node 24 LTS (`.nvmrc`); dibutuhkan Jest untuk NestJS 12 (ESM)
 - Pembayaran: Midtrans Snap, model paket akses (bukan auto-renewal dulu)
 - Soal harus orisinal; ada disclaimer tidak berafiliasi dengan IELTS
 - Bahasa: seluruh isi aplikasi (teks UI, pesan error, konten soal, comment
@@ -17,7 +22,8 @@ Fase: 1 (Fondasi project & AI tooling) — minggu ke-1
   dalam bahasa Indonesia. Dokumen di `docs/` tetap berbahasa Indonesia.
 
 ## Keputusan yang belum diambil
-- Library auth (Better Auth vs Supabase Auth)
+- Hosting PostgreSQL untuk production
+- Storage audio & gambar (sebelumnya Supabase Storage; kandidat: Cloudflare R2)
 - Harga & durasi paket
 - Platform deploy `apps/api` (Railway vs Fly.io vs Render)
 
@@ -50,6 +56,26 @@ Fase: 1 (Fondasi project & AI tooling) — minggu ke-1
   cara kerja, teaser AI study coach "coming soon", CTA) & polish UI halaman
   ujian. Icon pakai `lucide-react`, font Geist. Landing menyebut highlight &
   catatan, padahal fitur itu belum dibuat.
+- [2026-10-24] Memutuskan auth: WorkOS (AuthKit); database development:
+  PostgreSQL lokal (tanpa Supabase). Akibatnya hosting DB production & storage
+  audio/gambar kembali menjadi keputusan terbuka.
+- [2026-10-24] Membuat `apps/api` (NestJS 12, mengikuti template resmi:
+  TypeScript 6, Jest + ts-jest). Struktur module per fitur: `config/`,
+  `database/` (Pool pg + Drizzle, global), `common/`, `modules/health`.
+  `GET /health` mengecek koneksi PostgreSQL lokal (200/503), ada unit &
+  e2e test (DB `ielts_mock_test`). `apps/web` memanggilnya di halaman
+  `/status` lewat `core/services/api-client.ts`. Project distandarkan ke
+  Node 24 karena Jest butuh Node 24.9+ untuk paket ESM NestJS 12.
+  Panduan backend: `apps/api/AGENTS.md`.
+- [2026-10-24] Web memakai API untuk soal Reading & Listening. Dibuat
+  `packages/question-schema` (tipe tes/attempt + fungsi penilaian murni,
+  ESM, di-build ke `dist/`). API: module `tests` (GET /tests, /tests/:id)
+  dan `attempts` (POST /attempts, GET /attempts[/:id], PUT /:id/answers,
+  POST /:id/submit, GET /:id/result), validasi body dengan Zod, repository
+  masih in-memory. Web: dummy data, `records.ts`, dan `scoring.ts` dihapus;
+  services memanggil API; `error.tsx` saat API tidak terjangkau. Unit test
+  AttemptsService (deadline, sanitasi jawaban, penilaian). Belum: tabel
+  database (Fase 2), auth/kepemilikan attempt (Fase 3), unit test scoring.
 
 ## Yang masih bingung
 <!-- Tulis di sini, Claude akan menjelaskan ulang -->

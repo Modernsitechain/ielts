@@ -1,176 +1,64 @@
 import "server-only";
 
-import { attempts, tests } from "@/core/datas";
 import type {
   AttemptMode,
   AttemptResult,
   AttemptSession,
   AttemptSummary,
-  ResultItem,
 } from "@/core/models/attempt";
-import type { AttemptRecord, TestRecord } from "@/core/models/records";
-import { isAnswerCorrect, rawScoreToBand } from "./scoring";
+import { ApiError, apiFetch, apiJson } from "./api-client";
 
-// Mimics apps/api on top of dummy data. Timing and grading are decided here
-// (server side), never trusted from the browser.
+// Timing, validation and grading all happen in apps/api; these functions
+// only forward requests and map responses.
 
-/** Allowance for network delay when auto-submitting in the last second. */
-const DEADLINE_GRACE_MS = 30_000;
-const MAX_ANSWER_LENGTH = 200;
-
-function isPastDeadline(attempt: AttemptRecord): boolean {
-  return Date.now() > Date.parse(attempt.endsAt) + DEADLINE_GRACE_MS;
+function attemptPath(attemptId: string, suffix = ""): string {
+  return `/attempts/${encodeURIComponent(attemptId)}${suffix}`;
 }
 
-function toSession(attempt: AttemptRecord): AttemptSession {
-  return {
-    id: attempt.id,
-    testId: attempt.testId,
-    mode: attempt.mode,
-    startedAt: attempt.startedAt,
-    endsAt: attempt.endsAt,
-    submittedAt: attempt.submittedAt,
-    answers: { ...attempt.answers },
-  };
-}
-
-/** Browser input is untrusted: only this test's questions, only strings. */
-function sanitizeAnswers(
-  test: TestRecord,
-  answers: unknown,
-): Record<string, string> {
-  if (typeof answers !== "object" || answers === null) return {};
-
-  const input = answers as Record<string, unknown>;
-  const result: Record<string, string> = {};
-  for (const questionId of Object.keys(test.answerKey)) {
-    const value = input[questionId];
-    if (typeof value !== "string") continue;
-    const trimmed = value.trim().slice(0, MAX_ANSWER_LENGTH);
-    if (trimmed !== "") result[questionId] = trimmed;
-  }
-  return result;
-}
-
-function grade(
-  attempt: AttemptRecord,
-  test: TestRecord,
-  submittedAt: string,
-): AttemptResult {
-  const items: ResultItem[] = test.sections.flatMap((section) =>
-    section.groups.flatMap((group) =>
-      group.questions.map((question) => {
-        const given = attempt.answers[question.id] ?? null;
-        const accepted = test.answerKey[question.id] ?? [];
-        return {
-          questionId: question.id,
-          number: question.number,
-          prompt: question.prompt,
-          given,
-          accepted,
-          isCorrect: isAnswerCorrect(group.payload, given, accepted),
-        };
-      }),
-    ),
-  );
-
-  const rawScore = items.filter((item) => item.isCorrect).length;
-  return {
-    id: attempt.id,
-    testId: test.id,
-    testTitle: test.title,
-    skill: test.skill,
-    mode: attempt.mode,
-    submittedAt,
-    rawScore,
-    totalQuestions: items.length,
-    band: rawScoreToBand(test.skill, rawScore, items.length),
-    items,
-  };
-}
-
+/** Starts an attempt, or returns null if the test doesn't exist. */
 export async function startAttempt(
   testId: string,
   mode: AttemptMode,
 ): Promise<AttemptSession | null> {
-  const test = tests.find((t) => t.id === testId);
-  if (!test) return null;
-
-  const startedAt = new Date();
-  const endsAt = new Date(startedAt.getTime() + test.durationMinutes * 60_000);
-  const attempt: AttemptRecord = {
-    id: crypto.randomUUID(),
-    testId,
-    mode,
-    startedAt: startedAt.toISOString(),
-    endsAt: endsAt.toISOString(),
-    submittedAt: null,
-    answers: {},
-  };
-  attempts.push(attempt);
-  return toSession(attempt);
+  return apiJson<AttemptSession>("/attempts", { method: "POST", body: { testId, mode } });
 }
 
-export async function getAttemptSession(
-  attemptId: string,
-): Promise<AttemptSession | null> {
-  const attempt = attempts.find((a) => a.id === attemptId);
-  return attempt ? toSession(attempt) : null;
+export async function getAttemptSession(attemptId: string): Promise<AttemptSession | null> {
+  return apiJson<AttemptSession>(attemptPath(attemptId));
 }
 
-/** Autosave. Rejected if the attempt is already submitted or time is up. */
+/** Autosave. False when the API refuses it (submitted, time up, invalid). */
 export async function saveAnswers(
   attemptId: string,
-  answers: unknown,
+  answers: Record<string, string>,
 ): Promise<boolean> {
-  const attempt = attempts.find((a) => a.id === attemptId);
-  const test = attempt && tests.find((t) => t.id === attempt.testId);
-  if (!attempt || !test || attempt.submittedAt || isPastDeadline(attempt)) {
-    return false;
-  }
-  attempt.answers = sanitizeAnswers(test, answers);
-  return true;
+  const response = await apiFetch(attemptPath(attemptId, "/answers"), {
+    method: "PUT",
+    body: { answers },
+  });
+  return response.ok;
 }
 
-/**
- * Submit. If time is up, answers from the browser are ignored and the last
- * autosave before the deadline is graded instead.
- */
+/** Submits the attempt. False if it was already submitted or doesn't exist. */
 export async function submitAttempt(
   attemptId: string,
-  answers: unknown,
+  answers: Record<string, string>,
 ): Promise<boolean> {
-  const attempt = attempts.find((a) => a.id === attemptId);
-  const test = attempt && tests.find((t) => t.id === attempt.testId);
-  if (!attempt || !test || attempt.submittedAt) return false;
-
-  if (!isPastDeadline(attempt)) {
-    attempt.answers = sanitizeAnswers(test, answers);
-  }
-  attempt.submittedAt = new Date().toISOString();
-  return true;
+  const response = await apiFetch(attemptPath(attemptId, "/submit"), {
+    method: "POST",
+    body: { answers },
+  });
+  return response.ok;
 }
 
-export async function getAttemptResult(
-  attemptId: string,
-): Promise<AttemptResult | null> {
-  const attempt = attempts.find((a) => a.id === attemptId);
-  const test = attempt && tests.find((t) => t.id === attempt.testId);
-  if (!attempt?.submittedAt || !test) return null;
-  return grade(attempt, test, attempt.submittedAt);
+/** Graded result, or null if the attempt doesn't exist or isn't submitted. */
+export async function getAttemptResult(attemptId: string): Promise<AttemptResult | null> {
+  return apiJson<AttemptResult>(attemptPath(attemptId, "/result"));
 }
 
+/** Submitted attempts, newest first. */
 export async function listAttempts(): Promise<AttemptSummary[]> {
-  return attempts
-    .flatMap((attempt) => {
-      const test = tests.find((t) => t.id === attempt.testId);
-      if (!attempt.submittedAt || !test) return [];
-      const { items: _items, ...summary } = grade(
-        attempt,
-        test,
-        attempt.submittedAt,
-      );
-      return [summary];
-    })
-    .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+  const attempts = await apiJson<AttemptSummary[]>("/attempts");
+  if (!attempts) throw new ApiError(404, "/attempts");
+  return attempts;
 }

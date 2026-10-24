@@ -32,10 +32,11 @@ Target: MVP live dalam ±12–14 minggu (1–2 jam/hari).
 - Frontend: Next.js (App Router) + TypeScript strict — `apps/web` & `apps/admin`
 - Backend: NestJS — `apps/api`
 - UI: Tailwind CSS + shadcn/ui (package bersama)
-- Database: PostgreSQL (Supabase) + Drizzle ORM (diakses `apps/api` saja)
-- Storage audio/gambar: Supabase Storage (alternatif: Cloudflare R2)
-- Auth: [belum diputuskan — kandidat: Better Auth atau Supabase Auth;
-  harus diputuskan sebelum skema `users` final di Fase 2]
+- Database: PostgreSQL + Drizzle ORM (diakses `apps/api` saja). Development:
+  PostgreSQL lokal. Production: [belum diputuskan]
+- Storage audio/gambar: [belum diputuskan — kandidat: Cloudflare R2,
+  Supabase Storage; dibutuhkan di Fase 3]
+- Auth: WorkOS (AuthKit); identitas & role tetap divalidasi di `apps/api`
 - Validasi: Zod (dipakai bersama untuk skema soal & input API)
 - Pembayaran: Midtrans (Snap, model paket akses; subscription menyusul)
 - Test: Jest (bawaan NestJS) untuk `apps/api` (unit & integration),
@@ -81,7 +82,7 @@ Target: MVP live dalam ±12–14 minggu (1–2 jam/hari).
 
 **Dibangun:**
 
-- Keputusan library auth (sebelum skema `users` final)
+- Rancang integrasi WorkOS: tabel `users` (relasi ke WorkOS user id) & role
 - Skema Zod untuk setiap tipe soal Reading & Listening di
   `packages/question-schema` (discriminated union berdasarkan `type`)
 - Skema database: tests, sections, question_groups, questions,

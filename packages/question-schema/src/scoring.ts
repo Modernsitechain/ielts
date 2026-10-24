@@ -1,9 +1,7 @@
-import "server-only";
-
-import type { GroupPayload, Skill } from "@/core/models/test";
+import type { GroupPayload, Skill } from "./test.js";
 
 // Pure grading functions (no framework, no database).
-// Will move to packages/question-schema in Phase 2 and be called by apps/api.
+// Grading that is stored is always run by apps/api, never trusted from a client.
 
 /** Trim, lowercase, collapse repeated spaces, strip trailing punctuation. */
 export function normalizeAnswer(value: string): string {
