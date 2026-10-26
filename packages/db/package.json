@@ -20,6 +20,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsc && node dist/seed.js",
+    "db:set-role": "tsc && node dist/set-role.js",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

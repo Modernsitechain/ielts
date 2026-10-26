@@ -1,4 +1,9 @@
-import type { ChoiceOption, GroupPayload, Paragraph } from "@ielts-mock/question-schema";
+import {
+  type ChoiceOption,
+  type GroupPayload,
+  type Paragraph,
+  USER_ROLES,
+} from "@ielts-mock/question-schema";
 import { relations, sql } from "drizzle-orm";
 import {
   boolean,
@@ -11,9 +16,10 @@ import {
   text,
   timestamp,
   unique,
+  uuid,
 } from "drizzle-orm/pg-core";
 
-// Test content: tests → sections → question_groups → questions.
+// Test content: tests → sections → question_groups → questions. Users below.
 // Changing this file? Run `pnpm db:generate` to create a migration, review the
 // SQL in drizzle/, then `pnpm db:migrate`. See packages/db/AGENTS.md.
 //
@@ -102,6 +108,20 @@ export const questions = pgTable(
   },
   (table) => [unique("questions_group_position_unique").on(table.groupId, table.position)],
 );
+
+// Users: identity comes from WorkOS (sign-in), the role is ours. A row is
+// created by apps/api the first time someone signs in, as a student.
+export const userRoleEnum = pgEnum("user_role", USER_ROLES);
+
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  /** WorkOS user id ("user_01…"), the `sub` claim of the access token. */
+  workosUserId: text("workos_user_id").notNull().unique(),
+  email: text("email").notNull(),
+  name: text("name"),
+  role: userRoleEnum("role").notNull().default("student"),
+  ...timestamps,
+});
 
 // Relations let apps/api load a whole test in one query (`db.query.tests`).
 // They don't change the database; foreign keys above do.

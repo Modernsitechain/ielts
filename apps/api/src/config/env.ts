@@ -18,6 +18,13 @@ export const envSchema = z.object({
    * always in production.
    */
   ADMIN_API_KEY: z.string().min(32, "Use at least 32 characters (openssl rand -hex 32)").optional(),
+  /**
+   * WorkOS sign-in: Staging keys for local and development, Production keys
+   * for production. When unset, endpoints that need a signed-in user answer
+   * 503 (scripts such as the migrate job don't need them).
+   */
+  WORKOS_CLIENT_ID: z.string().startsWith("client_").optional(),
+  WORKOS_API_KEY: z.string().startsWith("sk_").optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

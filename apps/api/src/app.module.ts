@@ -4,6 +4,7 @@ import { ConfigModule } from "@nestjs/config";
 import { validateEnv } from "./config/env";
 import { DatabaseModule } from "./database/database.module";
 import { AdminTestsModule } from "./modules/admin-tests/admin-tests.module";
+import { AuthModule } from "./modules/auth/auth.module";
 import { AttemptsModule } from "./modules/attempts/attempts.module";
 import { HealthModule } from "./modules/health/health.module";
 import { TestsModule } from "./modules/tests/tests.module";
@@ -17,6 +18,7 @@ import { TestsModule } from "./modules/tests/tests.module";
       validate: validateEnv,
     }),
     DatabaseModule,
+    AuthModule,
     HealthModule,
     TestsModule,
     AttemptsModule,

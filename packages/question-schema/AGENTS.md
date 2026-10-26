@@ -17,6 +17,8 @@ dipakai oleh `apps/api`, `apps/web`, dan `apps/admin`.
 - `src/publish.ts` — `checkPublishReadiness`: syarat sebelum tes boleh
   publish (dipakai API untuk menolak, admin untuk menampilkan checklist).
 - `src/attempt.ts` — AttemptSession, AttemptSummary, AttemptResult, ResultItem.
+- `src/user.ts` — `USER_ROLES`, `UserRole`, `ADMIN_APP_ROLES`, `CurrentUser`
+  (response `GET /me`).
 - `src/scoring.ts` — fungsi murni: normalisasi jawaban, batas kata, cek
   jawaban, konversi raw score → band (tabel = konfigurasi).
 - `src/index.ts` — semua export publik.

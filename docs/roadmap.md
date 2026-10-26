@@ -133,7 +133,7 @@ Target: MVP live dalam ±12–14 minggu (1–2 jam/hari).
 
 **Kriteria selesai:**
 
-- [ ] User non-admin ditolak di level API (ada test-nya)
+- [x] User non-admin ditolak di level API (ada test-nya)
 - [ ] Editor bisa membuat 1 tes lengkap tanpa menyentuh database langsung
 - [ ] Tes draft tidak pernah dikembalikan oleh endpoint untuk peserta
 

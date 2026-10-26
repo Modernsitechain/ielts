@@ -82,6 +82,8 @@ Berlaku sejak 2026-10-26 (branch `development` dibuat atas aba-aba developer):
 | `DATABASE_URL`     | `postgresql://USER@localhost:5432/ielts_mock` | `${db.DATABASE_URL}` (`ielts_mock_development`) | `${db.DATABASE_URL}` (`ielts_mock`) | ya |
 | `DATABASE_CA_CERT` | (kosong)                       | `${db.CA_CERT}`                | `${db.CA_CERT}`                | ya      |
 | `ADMIN_API_KEY`    | hasil `openssl rand -hex 32`   | SECRET di app spec (acak)      | (tidak di-set)                 | ya      |
+| `WORKOS_CLIENT_ID` | WorkOS **Staging** (`client_…`) | WorkOS **Staging** (SECRET)   | WorkOS **Production** (SECRET) | ya      |
+| `WORKOS_API_KEY`   | WorkOS **Staging** (`sk_test_…`) | WorkOS **Staging** (SECRET)  | WorkOS **Production** (SECRET) | ya      |
 
 Di App Platform, `${db.…}` diisi otomatis dari database yang di-attach di app
 spec (`.do/api-<environment>.yaml`), jadi nilainya tidak pernah ditulis
@@ -96,6 +98,12 @@ DigitalOcean boleh ditempel apa adanya.
 `ADMIN_API_KEY`: kunci sementara untuk endpoint `/admin/*` (header
 `x-admin-key`), sampai WorkOS menggantikannya. Kosong = endpoint admin mati.
 Minimal 32 karakter. Nilainya harus sama dengan di `apps/admin/.env.local`.
+
+`WORKOS_CLIENT_ID` & `WORKOS_API_KEY` (dashboard WorkOS → API Keys): Client ID
+dipakai untuk memverifikasi access token (kunci publik/JWKS), API Key untuk
+mengambil profil user saat pertama kali login. Nilainya sama dengan yang di
+web & admin. Jika kosong, endpoint yang butuh login menjawab 503 (job migrasi
+tidak membutuhkannya). Belum diisi di DigitalOcean (Tahap 6 WorkOS).
 
 ### `apps/web` (divalidasi di `apps/web/core/config/env.ts`)
 

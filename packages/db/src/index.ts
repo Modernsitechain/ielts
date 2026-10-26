@@ -3,6 +3,7 @@ export * from "./content.js";
 export * from "./demo.js";
 export * from "./migrations.js";
 export * from "./schema.js";
+export * from "./users.js";
 /** All tables and relations, for `drizzle({ client, schema })`. */
 export * as schema from "./schema.js";
 

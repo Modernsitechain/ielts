@@ -15,6 +15,7 @@
     "db:generate": "pnpm --filter @ielts-mock/db db:generate",
     "db:migrate": "pnpm --filter @ielts-mock/db db:migrate",
     "db:seed": "pnpm --filter @ielts-mock/db db:seed",
+    "db:set-role": "pnpm --filter @ielts-mock/db db:set-role",
     "db:studio": "pnpm --filter @ielts-mock/db db:studio"
   },
   "devDependencies": {

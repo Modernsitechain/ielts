@@ -32,11 +32,17 @@ apps/api/
 │   ├── database/
 │   │   ├── database.module.ts  # koneksi PostgreSQL + Drizzle (global)
 │   │   ├── migrate.ts          # node dist/database/migrate.js (pre-deploy job)
-│   │   └── seed.ts             # node dist/database/seed.js (seed demo di server)
+│   │   ├── seed.ts             # node dist/database/seed.js (seed demo di server)
+│   │   └── set-role.ts         # node dist/database/set-role.js <email> <role> (di server)
 │   ├── common/               # dipakai lintas module: guard, filter, pipe, decorator
-│   │   ├── guards/admin-key.guard.ts     # SEMENTARA: kunci admin sampai WorkOS
+│   │   ├── guards/auth.guard.ts          # wajib login (access token WorkOS) → request.user
+│   │   ├── guards/roles.guard.ts         # cek @Roles([...]) setelah AuthGuard
+│   │   ├── guards/admin-access.guard.ts  # SEMENTARA: kunci admin ATAU AuthGuard
+│   │   ├── guards/admin-key.guard.ts     # SEMENTARA: kunci admin sampai admin login WorkOS
+│   │   ├── decorators/                   # @CurrentUser(), @Roles([...])
 │   │   └── pipes/zod-validation.pipe.ts  # validasi body/params dengan Zod
 │   └── modules/
+│       ├── auth/             # GET /me, verifikasi token WorkOS, tabel users (global)
 │       ├── health/           # GET /health (cek database)
 │       ├── tests/            # GET /tests, GET /tests/:id (hanya published, tanpa kunci jawaban)
 │       │                     # + TestsRepository: satu-satunya query tabel konten tes
@@ -84,10 +90,11 @@ apps/api/
 - **Semua input dari luar divalidasi** (body, params, query) dengan Zod
   sebelum dipakai.
 - **Hak akses dicek di API**, bukan di frontend: setiap endpoint non-publik
-  wajib memakai guard auth + role. Sementara (sebelum WorkOS), `/admin/*`
-  memakai `AdminKeyGuard`: header `x-admin-key` harus sama dengan
-  `ADMIN_API_KEY`, dan hanya aktif jika `APP_ENV=local` atau `development`
-  (tidak pernah production).
+  wajib memakai `@UseGuards(AuthGuard, RolesGuard)` + `@Roles([...])`.
+  `/admin/*`: role `editor` & `admin`; publish/unpublish hanya `admin`.
+  Sementara, `/admin/*` memakai `AdminAccessGuard` yang juga menerima header
+  `x-admin-key` (= `ADMIN_API_KEY`, hanya `APP_ENV=local`/`development`,
+  bertindak sebagai admin) sampai `apps/admin` login dengan WorkOS.
 - **Kunci jawaban tidak pernah dikirim** di response sebelum attempt di-submit.
   Pengecualian: endpoint `/admin/*` (untuk editor konten, dilindungi guard).
 - **Tes draft tidak pernah dikembalikan** endpoint peserta (`/tests`,
@@ -96,6 +103,19 @@ apps/api/
   atau status dari client.
 - Bahasa: kode, comment, pesan error, dan response dalam bahasa Inggris
   (British). Panduan ini tetap berbahasa Indonesia.
+
+## Login (WorkOS)
+
+- Web & admin login lewat WorkOS AuthKit, lalu mengirim access token ke API
+  sebagai `Authorization: Bearer <token>`.
+- `AccessTokenVerifier` memeriksa tanda tangan (JWKS client WorkOS kita,
+  di-cache) dan masa berlaku. Tidak ada panggilan ke WorkOS per request.
+- `UsersService.resolve`: mencari user di tabel `users`; jika belum ada,
+  profil diambil dari WorkOS API (`WORKOS_API_KEY`) dan user dibuat sebagai
+  `student`. Role diubah dengan `pnpm db:set-role` (lihat `packages/db`).
+- `GET /me` mengembalikan `CurrentUser` (`@ielts-mock/question-schema`).
+- Test tidak memanggil WorkOS: unit test me-mock verifier/service; e2e
+  memakai `test/auth-helpers.ts` (`fakeWorkos()`: kunci lokal + profil palsu).
 
 ## Konvensi
 

@@ -18,14 +18,18 @@ import {
   testInputSchema,
 } from "@ielts-mock/question-schema";
 
-import { AdminKeyGuard } from "../../common/guards/admin-key.guard";
+import { Roles } from "../../common/decorators/roles.decorator";
+import { AdminAccessGuard } from "../../common/guards/admin-access.guard";
+import { RolesGuard } from "../../common/guards/roles.guard";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { AdminTestsService } from "./admin-tests.service";
 
-// Responses include answers: for apps/admin only. AdminKeyGuard is temporary
-// until WorkOS login with admin/editor roles (Phase 3).
+// Responses include answers: for apps/admin only. Editors and admins may
+// edit; only admins publish. AdminAccessGuard also accepts the temporary admin
+// key until apps/admin signs in with WorkOS.
 @Controller("admin/tests")
-@UseGuards(AdminKeyGuard)
+@UseGuards(AdminAccessGuard, RolesGuard)
+@Roles(["editor", "admin"])
 export class AdminTestsController {
   constructor(private readonly adminTestsService: AdminTestsService) {}
 
@@ -57,12 +61,14 @@ export class AdminTestsController {
   }
 
   @Post(":id/publish")
+  @Roles(["admin"])
   @HttpCode(200)
   publish(@Param("id") id: string): Promise<AdminTest> {
     return this.adminTestsService.publish(id);
   }
 
   @Post(":id/unpublish")
+  @Roles(["admin"])
   @HttpCode(200)
   unpublish(@Param("id") id: string): Promise<AdminTest> {
     return this.adminTestsService.unpublish(id);

@@ -14,6 +14,8 @@ packages/db/
     ├── schema.ts         # tabel, enum, constraint, relations
     ├── content.ts        # tipe pohon konten + flattenContent (pohon → baris)
     ├── demo.ts           # seedDemoTests(db): dipakai pnpm db:seed & image API
+    ├── users.ts          # setUserRole(db, email, role): dipakai pnpm db:set-role & image API
+    ├── set-role.ts       # pnpm db:set-role <email> <role> (laptop)
     ├── migrations.ts     # MIGRATIONS_FOLDER: lokasi drizzle/ (repo & image)
     ├── load-env.ts       # membaca DATABASE_URL untuk script seed lokal
     ├── seed.ts           # pnpm db:seed (laptop)
@@ -50,8 +52,21 @@ Alasan desain:
 - `questions.answers` adalah kunci jawaban: API tidak pernah mengirimnya ke
   peserta sebelum submit.
 
-Belum ada tabel `users`, `attempts`, `purchases`, dll. (Fase 2/3). Attempt
-masih disimpan di memori `apps/api`.
+## Tabel `users`
+
+| Kolom            | Isi                                                                 |
+| ---------------- | ------------------------------------------------------------------- |
+| `id`             | UUID (dibuat PostgreSQL)                                            |
+| `workos_user_id` | id user WorkOS (`user_01…`, claim `sub` di access token), UNIQUE    |
+| `email`, `name`  | dari profil WorkOS saat user pertama kali login                     |
+| `role`           | enum `user_role`: `student` (default), `editor`, `admin`            |
+
+Identitas (siapa user ini) dari WorkOS; **role milik kita** dan dicek di API.
+Baris dibuat otomatis oleh API saat request pertama user yang login. Nilai enum
+role berasal dari `USER_ROLES` di `@ielts-mock/question-schema`.
+
+Belum ada tabel `attempts`, `purchases`, dll. Attempt masih disimpan di memori
+`apps/api`.
 
 ## Perintah (dari root repo)
 
@@ -60,6 +75,7 @@ masih disimpan di memori `apps/api`.
 | `pnpm db:generate --name x`  | membuat file migrasi baru dari perubahan `schema.ts`          |
 | `pnpm db:migrate`            | menjalankan migrasi yang belum jalan ke database `ielts_mock` |
 | `pnpm db:seed`               | memasukkan ulang tes demo (tes buatan admin tidak disentuh)   |
+| `pnpm db:set-role <email> <role>` | memberi role ke user yang sudah pernah login (misalnya admin pertama) |
 | `pnpm db:studio`             | membuka Drizzle Studio (lihat isi tabel di browser)           |
 
 Database test: tambahkan `DB_ENV=test` di depan, misalnya
@@ -87,7 +103,8 @@ Buat migrasi baru.
 
 Folder `drizzle/` ikut terpasang di image API (`"files"` di package.json).
 Migrasi dijalankan oleh pre-deploy job `node dist/database/migrate.js` dan
-seed demo oleh `node dist/database/seed.js` (keduanya di `apps/api`, memakai
+seed demo oleh `node dist/database/seed.js`, role oleh
+`node dist/database/set-role.js <email> <role>` (semuanya di `apps/api`, memakai
 setelan SSL/CA yang sama dengan API). Lihat `docs/deployment.md`.
 
 ## Aturan

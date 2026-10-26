@@ -7,6 +7,11 @@ Fase: 1 → sebagian Fase 2 & 3 (database konten + admin Reading) — minggu ke-
 sudah disusun di `docs/deployment.md`, belum dikerjakan. Mulai dari bagian "Keputusan yang
 perlu diambil" di file itu.
 
+**WorkOS sedang dikerjakan** (rencana 6 tahap): Tahap 1 (akun WorkOS Staging,
+redirect URI, key di `.env` lokal) ✅, Tahap 2–3 (tabel `users` + auth di API)
+✅. Berikutnya: Tahap 4 login di web, Tahap 5 login di admin (hapus kunci &
+Basic Auth), Tahap 6 secret WorkOS di DigitalOcean + admin pertama.
+
 **Development sudah live**: https://ielts-development-9acd2.ondigitalocean.app
 (web di `/`, admin di `/admin` dengan password sementara, API di `/api`).
 App lama `ielts-api-development` sudah dihapus. Berikutnya: production
@@ -54,6 +59,10 @@ catatan sesi 2026-10-24.
   berlabel (A, B, C…). Tes published read-only (unpublish untuk edit); publish
   ditolak jika belum lengkap (`checkPublishReadiness`). Tes Listening demo tetap
   lewat seed, tidak bisa diedit di admin
+- Auth: role disimpan di tabel `users` kita (bukan fitur Roles WorkOS); user
+  baru = `student`; `editor` boleh mengedit tes, hanya `admin` yang boleh
+  publish/unpublish. WorkOS Staging untuk local & development, Production
+  untuk production
 - Pembayaran: Midtrans Snap, model paket akses (bukan auto-renewal dulu)
 - Soal harus orisinal; ada disclaimer tidak berafiliasi dengan IELTS
 - Bahasa: seluruh isi aplikasi (teks UI, pesan error, konten soal, comment
@@ -163,6 +172,14 @@ catatan sesi 2026-10-24.
   (`proxy.ts`, Basic Auth) di luar local, guard API mengizinkan admin di
   development, app spec baru `.do/development.yaml` (api + web + admin, satu
   domain) dan `.do/production.yaml` (api privat + web).
+- [2026-10-26] WorkOS Tahap 1–3. Akun WorkOS (Staging), redirect URI web &
+  admin (lokal + development), key di `.env` lokal. `packages/db`: tabel
+  `users` (migrasi `0001_users`), `pnpm db:set-role`. `question-schema`:
+  `UserRole`, `CurrentUser`. API: module `auth` (`GET /me`, verifikasi token
+  dengan JWKS via `jose`, profil dari WorkOS API saat login pertama),
+  `AuthGuard`, `RolesGuard` + `@Roles`, `AdminAccessGuard` sementara (kunci
+  admin atau login), publish/unpublish khusus admin. Unit test + e2e dengan
+  WorkOS palsu.
 
 ## Yang masih bingung
 <!-- Tulis di sini, Claude akan menjelaskan ulang -->
