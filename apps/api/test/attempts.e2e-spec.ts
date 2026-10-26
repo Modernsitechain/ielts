@@ -151,6 +151,24 @@ describe("Attempts (e2e)", () => {
     expect((result.body as AttemptResult).items.map((item) => item.isCorrect)).toEqual([true, false]);
   });
 
+  it("stores flagged questions", async () => {
+    const server = app.getHttpServer();
+    const started = await request(server).post("/attempts").set(candidate).send({ testId, mode: "exam" }).expect(201);
+    const session = started.body as AttemptSession;
+    expect(session.flaggedQuestionIds).toEqual([]);
+
+    const flagged = [questionIds[1] ?? ""];
+    await request(server).put(`/attempts/${session.id}/flags`).set(candidate).send({ questionIds: flagged }).expect(204);
+    const reloaded = await request(server).get(`/attempts/${session.id}`).set(candidate).expect(200);
+    expect((reloaded.body as AttemptSession).flaggedQuestionIds).toEqual(flagged);
+
+    await request(server)
+      .put(`/attempts/${session.id}/flags`)
+      .set(candidate)
+      .send({ questionIds: ["not-a-question"] })
+      .expect(400);
+  });
+
   it("stores highlights and notes on the test's text", async () => {
     const server = app.getHttpServer();
     const started = await request(server).post("/attempts").set(candidate).send({ testId, mode: "exam" }).expect(201);

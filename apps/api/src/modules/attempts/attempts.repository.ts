@@ -32,7 +32,15 @@ export class AttemptsRepository {
       })
       .returning({ id: attempts.id });
     if (!row) throw new Error("Attempt was not created");
-    return { ...attempt, id: row.id, submittedAt: null, answers: {}, annotations: [], score: null };
+    return {
+      ...attempt,
+      id: row.id,
+      submittedAt: null,
+      answers: {},
+      annotations: [],
+      flaggedQuestionIds: [],
+      score: null,
+    };
   }
 
   async findById(id: string): Promise<AttemptRecord | null> {
@@ -60,6 +68,7 @@ export class AttemptsRepository {
       endsAt: row.endsAt.toISOString(),
       submittedAt: row.submittedAt?.toISOString() ?? null,
       answers,
+      flaggedQuestionIds: row.flaggedQuestionIds,
       annotations: row.annotations.map((a) => ({
         blockId: a.blockId,
         start: a.startOffset,
@@ -85,6 +94,13 @@ export class AttemptsRepository {
       if (rows.length) await tx.insert(attemptAnswers).values(rows);
       await tx.update(attempts).set({ updatedAt: sql`now()` }).where(eq(attempts.id, id));
     });
+  }
+
+  async saveFlags(id: string, questionIds: string[]): Promise<void> {
+    await this.db
+      .update(attempts)
+      .set({ flaggedQuestionIds: questionIds, updatedAt: sql`now()` })
+      .where(eq(attempts.id, id));
   }
 
   /** Replaces all highlights and notes of an attempt. */

@@ -74,7 +74,7 @@ tests ──< attempts
 
 | Tabel             | Isi penting                                                                 |
 | ----------------- | --------------------------------------------------------------------------- |
-| `attempts`        | `user_id` (CASCADE), `test_id` (**RESTRICT**), `mode` (enum `exam`/`practice`), `started_at`, `ends_at` (CHECK > started_at), `submitted_at` (null = sedang dikerjakan), `raw_score`, `total_questions`, `band` (diisi saat submit; CHECK: wajib ada jika sudah submit) |
+| `attempts`        | `user_id` (CASCADE), `test_id` (**RESTRICT**), `mode` (enum `exam`/`practice`), `started_at`, `ends_at` (CHECK > started_at), `submitted_at` (null = sedang dikerjakan), `raw_score`, `total_questions`, `band` (diisi saat submit; CHECK: wajib ada jika sudah submit), `flagged_question_ids` (text[], soal yang di-flag peserta) |
 | `attempt_answers` | PK (`attempt_id`, `question_id`), `value`, `is_correct` (diisi saat submit) |
 
 Alasan desain:

@@ -1,0 +1,1 @@
+ALTER TABLE "attempts" ADD COLUMN "flagged_question_ids" text[] DEFAULT '{}'::text[] NOT NULL;

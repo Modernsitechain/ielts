@@ -153,6 +153,11 @@ export const attempts = pgTable(
     totalQuestions: integer("total_questions"),
     /** Null when no band applies (e.g. a test with fewer than 40 questions). */
     band: numeric("band", { precision: 3, scale: 1, mode: "number" }),
+    /** Questions the candidate flagged for review. */
+    flaggedQuestionIds: text("flagged_question_ids")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     ...timestamps,
   },
   (table) => [

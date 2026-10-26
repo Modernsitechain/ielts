@@ -15,6 +15,8 @@ import { AttemptsService } from "./attempts.service";
 import {
   type SaveAnswersDto,
   saveAnswersSchema,
+  type SaveFlagsDto,
+  saveFlagsSchema,
   type StartAttemptDto,
   startAttemptSchema,
   type SubmitAttemptDto,
@@ -57,6 +59,17 @@ export class AttemptsController {
     @Body(new ZodValidationPipe(saveAnswersSchema)) body: SaveAnswersDto,
   ): Promise<void> {
     await this.attemptsService.saveAnswers(user.id, id, body.answers);
+  }
+
+  /** Questions flagged for review, replacing the saved ones. */
+  @Put(":id/flags")
+  @HttpCode(204)
+  async saveFlags(
+    @CurrentUser() user: CurrentUserData,
+    @Param("id") id: string,
+    @Body(new ZodValidationPipe(saveFlagsSchema)) body: SaveFlagsDto,
+  ): Promise<void> {
+    await this.attemptsService.saveFlags(user.id, id, body.questionIds);
   }
 
   /** Highlights and notes, replacing the saved ones. */

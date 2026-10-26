@@ -6,6 +6,7 @@ import type { Annotation } from "@/core/models/annotation";
 import {
   saveAnnotations,
   saveAnswers,
+  saveFlags,
   startAttempt,
   submitAttempt,
 } from "@/core/services/attempt.service";
@@ -36,6 +37,10 @@ export async function saveAnswersAction(
   answers: Record<string, string>,
 ): Promise<boolean> {
   return saveAnswers(attemptId, answers);
+}
+
+export async function saveFlagsAction(attemptId: string, questionIds: string[]): Promise<boolean> {
+  return saveFlags(attemptId, questionIds);
 }
 
 export async function saveAnnotationsAction(

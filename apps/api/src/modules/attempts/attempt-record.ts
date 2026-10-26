@@ -24,6 +24,8 @@ export type AttemptRecord = {
   answers: Record<string, string>;
   /** Highlights and notes. */
   annotations: Annotation[];
+  /** Questions flagged for review. */
+  flaggedQuestionIds: string[];
   /** Null until submitted. */
   score: AttemptScore | null;
 };

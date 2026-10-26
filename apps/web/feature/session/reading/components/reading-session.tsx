@@ -37,6 +37,7 @@ import type { TestDetail } from "@/core/models/test";
 import {
   saveAnnotationsAction,
   saveAnswersAction,
+  saveFlagsAction,
   submitAttemptAction,
 } from "@/feature/session/actions";
 
@@ -96,7 +97,8 @@ export function ReadingSession({
   );
 
   const [answers, setAnswers] = useState(session.answers);
-  const [flagged, setFlagged] = useState<Set<number>>(() => new Set());
+  const [flaggedIds, setFlaggedIds] = useState(session.flaggedQuestionIds);
+  const [flagSaveState, setFlagSaveState] = useState<SaveState>("saved");
   const [currentNumber, setCurrentNumber] = useState(questions[0]?.number ?? 1);
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [annotations, setAnnotations] = useState(session.annotations);
@@ -150,6 +152,20 @@ export function ReadingSession({
     }, AUTOSAVE_DELAY_MS);
     return () => clearTimeout(timeout);
   }, [answers, session.id, session.answers]);
+
+  // Flags are saved the same way; the nav works with question numbers.
+  const flaggedNumbers = useMemo(
+    () => new Set(questions.filter((q) => flaggedIds.includes(q.id)).map((q) => q.number)),
+    [questions, flaggedIds],
+  );
+  useEffect(() => {
+    if (flaggedIds === session.flaggedQuestionIds) return;
+    const timeout = setTimeout(async () => {
+      const ok = await saveFlagsAction(session.id, flaggedIds).catch(() => false);
+      setFlagSaveState(ok ? "saved" : "error");
+    }, AUTOSAVE_DELAY_MS);
+    return () => clearTimeout(timeout);
+  }, [flaggedIds, session.id, session.flaggedQuestionIds]);
 
   // Autosave highlights and notes the same way.
   useEffect(() => {
@@ -262,12 +278,12 @@ export function ReadingSession({
   };
 
   const notes = annotations.filter((annotation) => annotation.note);
-  const shownSaveState: SaveState =
-    saveState === "error" || annotationSaveState === "error"
-      ? "error"
-      : saveState === "saving" || annotationSaveState === "saving"
-        ? "saving"
-        : "saved";
+  const saveStates = [saveState, annotationSaveState, flagSaveState];
+  const shownSaveState: SaveState = saveStates.includes("error")
+    ? "error"
+    : saveStates.includes("saving")
+      ? "saving"
+      : "saved";
 
   // Scroll the active question into view (e.g. after clicking in the nav).
   useEffect(() => {
@@ -307,12 +323,14 @@ export function ReadingSession({
   };
 
   const toggleFlag = () => {
-    setFlagged((previous) => {
-      const next = new Set(previous);
-      if (next.has(currentNumber)) next.delete(currentNumber);
-      else next.add(currentNumber);
-      return next;
-    });
+    const question = questions[currentIndex];
+    if (!question) return;
+    setFlaggedIds((previous) =>
+      previous.includes(question.id)
+        ? previous.filter((id) => id !== question.id)
+        : [...previous, question.id],
+    );
+    setFlagSaveState("saving");
   };
 
   if (!section) return null;
@@ -424,7 +442,7 @@ export function ReadingSession({
         parts={parts}
         currentNumber={currentNumber}
         answeredNumbers={answeredNumbers}
-        flaggedNumbers={flagged}
+        flaggedNumbers={flaggedNumbers}
         onSelect={setCurrentNumber}
         onPrevious={() => goToIndex(currentIndex - 1)}
         onNext={() => goToIndex(currentIndex + 1)}

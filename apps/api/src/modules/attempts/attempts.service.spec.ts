@@ -78,7 +78,7 @@ class FakeAttemptsRepository
   implements
     Pick<
       AttemptsRepository,
-      "create" | "findById" | "saveAnswers" | "saveAnnotations" | "submit" | "findSubmittedSummaries"
+      "create" | "findById" | "saveAnswers" | "saveFlags" | "saveAnnotations" | "submit" | "findSubmittedSummaries"
     >
 {
   readonly rows = new Map<string, AttemptRecord>();
@@ -90,6 +90,7 @@ class FakeAttemptsRepository
       submittedAt: null,
       answers: {},
       annotations: [],
+      flaggedQuestionIds: [],
       score: null,
     };
     this.rows.set(record.id, record);
@@ -104,6 +105,11 @@ class FakeAttemptsRepository
   async saveAnswers(id: string, answers: Record<string, string>): Promise<void> {
     const record = this.rows.get(id);
     if (record) record.answers = { ...answers };
+  }
+
+  async saveFlags(id: string, questionIds: string[]): Promise<void> {
+    const record = this.rows.get(id);
+    if (record) record.flaggedQuestionIds = [...questionIds];
   }
 
   async saveAnnotations(id: string, list: Annotation[]): Promise<void> {
@@ -236,6 +242,16 @@ describe("AttemptsService", () => {
     const { id } = await service.start(USER, READING_TEST, "exam");
     await service.submit(USER, id, {});
     await expect(service.submit(USER, id, {})).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it("saves flags for the test's own questions", async () => {
+    const { id } = await service.start(USER, READING_TEST, "exam");
+    await service.saveFlags(USER, id, ["r1-q2", "r1-q2", "r1-q4"]);
+    expect((await service.getSession(USER, id)).flaggedQuestionIds).toEqual(["r1-q2", "r1-q4"]);
+
+    await expect(service.saveFlags(USER, id, ["other-q"])).rejects.toBeInstanceOf(BadRequestException);
+    await service.submit(USER, id, {});
+    await expect(service.saveFlags(USER, id, [])).rejects.toBeInstanceOf(ConflictException);
   });
 
   it("saves annotations that point at the test's text", async () => {

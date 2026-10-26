@@ -40,6 +40,15 @@ export async function saveAnswers(
   return response.ok;
 }
 
+/** Saves the flagged question ids. False when the API refuses. */
+export async function saveFlags(attemptId: string, questionIds: string[]): Promise<boolean> {
+  const response = await apiFetch(attemptPath(attemptId, "/flags"), {
+    method: "PUT",
+    body: { questionIds },
+  });
+  return response.ok;
+}
+
 /** Saves highlights and notes. False when the API refuses (submitted, invalid). */
 export async function saveAnnotations(attemptId: string, annotations: Annotation[]): Promise<boolean> {
   const response = await apiFetch(attemptPath(attemptId, "/annotations"), {

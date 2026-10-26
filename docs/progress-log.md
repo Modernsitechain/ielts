@@ -261,6 +261,11 @@ Butuh langkah dari developer dulu (token). Detail CI: `docs/ci.md`.
   portal dengan posisi inline (sebelumnya muncul di kiri bawah).
   Logika seleksi diuji di Chrome headless. Berikutnya: Tahap B (flag
   tersimpan), C (font & kontras), D (polesan).
+- [2026-10-27] Reading Tahap B: flag for review tersimpan. Kolom
+  `attempts.flagged_question_ids` (migrasi `0004_flagged_questions`),
+  `PUT /attempts/:id/flags` (hanya id soal milik tes itu, sampai submit), web
+  menyimpan otomatis seperti jawaban. Unit + e2e. Berikutnya: Tahap C (font &
+  kontras).
 
 ## Yang masih bingung
 <!-- Tulis di sini, Claude akan menjelaskan ulang -->

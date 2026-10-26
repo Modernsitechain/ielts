@@ -16,6 +16,8 @@ export type AttemptSession = {
   answers: Record<string, string>;
   /** Highlights and notes, saved like answers. */
   annotations: Annotation[];
+  /** Ids of the questions flagged for review. */
+  flaggedQuestionIds: string[];
 };
 
 export type AttemptSummary = {

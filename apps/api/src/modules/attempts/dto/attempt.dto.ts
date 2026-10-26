@@ -14,5 +14,11 @@ export type StartAttemptDto = z.infer<typeof startAttemptSchema>;
 export const saveAnswersSchema = z.object({ answers: answersSchema });
 export type SaveAnswersDto = z.infer<typeof saveAnswersSchema>;
 
+/** Question ids flagged for review; a test has at most 40 questions. */
+export const saveFlagsSchema = z.object({
+  questionIds: z.array(z.string().min(1).max(100)).max(100),
+});
+export type SaveFlagsDto = z.infer<typeof saveFlagsSchema>;
+
 export const submitAttemptSchema = z.object({ answers: answersSchema });
 export type SubmitAttemptDto = z.infer<typeof submitAttemptSchema>;

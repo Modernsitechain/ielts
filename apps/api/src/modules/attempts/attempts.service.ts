@@ -35,6 +35,7 @@ function toSession(attempt: AttemptRecord): AttemptSession {
     submittedAt: attempt.submittedAt,
     answers: attempt.answers,
     annotations: attempt.annotations,
+    flaggedQuestionIds: attempt.flaggedQuestionIds,
   };
 }
 
@@ -143,6 +144,19 @@ export class AttemptsService {
 
     const test = await this.requireTest(attempt.testId);
     await this.attemptsRepository.saveAnswers(id, sanitizeAnswers(test, answers));
+  }
+
+  /** Saves the questions flagged for review. Allowed until submission. */
+  async saveFlags(userId: string, id: string, questionIds: string[]): Promise<void> {
+    const attempt = await this.requireAttempt(userId, id);
+    if (attempt.submittedAt) throw new ConflictException("Attempt already submitted");
+
+    const test = await this.requireTest(attempt.testId);
+    const unknown = questionIds.filter((questionId) => !(questionId in test.answerKey));
+    if (unknown.length) {
+      throw new BadRequestException(`Unknown question ids: ${unknown.join(", ")}`);
+    }
+    await this.attemptsRepository.saveFlags(id, [...new Set(questionIds)]);
   }
 
   /**
