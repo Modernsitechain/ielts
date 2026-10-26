@@ -2,9 +2,9 @@
 
 Status (2026-10-26):
 - Database cluster `ielts-db` ✅ (Tahap 1).
-- Development: app lama `ielts-api-development` (api saja) jalan. Kode untuk
-  app baru **`ielts-development`** (api + web + admin) siap; app ini
-  menggantikan app lama (Tahap 3).
+- Development ✅: app **`ielts-development`** (api + web + admin) jalan di
+  https://ielts-development-9acd2.ondigitalocean.app (`/admin`, `/api`).
+  App lama `ielts-api-development` (api saja) sudah dihapus.
 - Production: belum dibuat (Tahap 5).
 
 ## Keputusan yang sudah diambil
@@ -132,7 +132,13 @@ Lalu:
 2. Simpan versi terenkripsi rahasia ke repo: `doctl apps spec get <app-id>`,
    salin nilai `EV[...]` ke `.do/development.yaml` menggantikan placeholder,
    commit. Mulai saat itu `doctl apps update <app-id> --spec .do/development.yaml`
-   aman dipakai.
+   aman dipakai. (✅ sudah dilakukan untuk `ielts-development`.)
+
+Catatan: `EV[...]` hanya berlaku untuk app yang sudah ada.
+`doctl apps spec validate` dan `doctl apps create` menolaknya ("secret env
+value must not be encrypted before app is created"). Jika app perlu dibuat
+ulang, ganti dulu nilai `EV[...]` di file sementara dengan nilai acak baru
+(cara sama seperti di atas).
 
 ### Tahap 4 — Cek development
 1. **Activity / Deployments**: build 3 image → job `migrate` ("Migrations

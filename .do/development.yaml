@@ -1,6 +1,6 @@
 # DigitalOcean App Platform spec: environment "development" (api + web + admin).
 # Deploys on every push to the `development` branch. Setup: docs/deployment.md.
-#   Create: see docs/deployment.md (secrets are filled in at creation time)
+#   App: ielts-development (doctl apps list)
 #   Update: doctl apps update <app-id> --spec .do/development.yaml
 #
 # Secrets: values marked EV[...] are encrypted by App Platform and can only be
@@ -36,7 +36,7 @@ services:
         value: ${db.CA_CERT}
         scope: RUN_TIME
       - key: ADMIN_API_KEY
-        value: __ADMIN_API_KEY__
+        value: EV[1:KBWXqgMvFoFNP31MRGCb0xtsqUolQKhp:4+FIHBFBkgi88DI8ZvE9EgBRPntgXgXXS7klF/UvUc9E7/eX3phPzL97bIWxGxJ66CLx0CpGgQwhHZw/fyiMOyV2r0gb+sFech2lGCV+0Iw=]
         type: SECRET
         scope: RUN_TIME
 
@@ -81,7 +81,7 @@ services:
         value: http://api:4000
         scope: RUN_TIME
       - key: ADMIN_API_KEY
-        value: __ADMIN_API_KEY__
+        value: EV[1:6jKmXxpUi5rjYVJDQ3CTGcHQoH+n1hOw:aMkxxR7Pqm42K7bbxso+Rkzptxa7kd0spdO6c8A1MMfCTiiEkEOsKBplROvRXhg82NtbeUj4hf0ENyUKpCxO4wRDCH+AKJBs/HrQbzIrv3M=]
         type: SECRET
         scope: RUN_TIME
       # TEMPORARY password gate until WorkOS login (apps/admin/proxy.ts).
@@ -89,7 +89,7 @@ services:
         value: admin
         scope: RUN_TIME
       - key: ADMIN_BASIC_AUTH_PASSWORD
-        value: __ADMIN_BASIC_AUTH_PASSWORD__
+        value: EV[1:YdQHMuHDHVjOl6pkcAHxqq+NAWIh3/8C:k/Fv1HyJEbAKGXHW7x1r7eYdHHMSrqq4MWlezIV4sTyI/19a89M1ctVWg4C/JE1F]
         type: SECRET
         scope: RUN_TIME
 

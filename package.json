@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "turbo run dev",
-    "dev:remote": "API_URL=https://ielts-api-development-c4h2l.ondigitalocean.app turbo run dev --filter=@ielts-mock/web",
+    "dev:remote": "API_URL=https://ielts-development-9acd2.ondigitalocean.app/api turbo run dev --filter=@ielts-mock/web",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",

@@ -7,11 +7,10 @@ Fase: 1 → sebagian Fase 2 & 3 (database konten + admin Reading) — minggu ke-
 sudah disusun di `docs/deployment.md`, belum dikerjakan. Mulai dari bagian "Keputusan yang
 perlu diambil" di file itu.
 
-**Deploy development**: database `ielts-db` siap, app lama
-`ielts-api-development` (api saja) jalan. Kode untuk app baru
-`ielts-development` (api + web + admin di balik password sementara) siap;
-lanjut dari Tahap 3 di `docs/deployment.md`, lalu hapus app lama. Kerja
-sekarang di branch `development`.
+**Development sudah live**: https://ielts-development-9acd2.ondigitalocean.app
+(web di `/`, admin di `/admin` dengan password sementara, API di `/api`).
+App lama `ielts-api-development` sudah dihapus. Berikutnya: production
+(Tahap 5 di `docs/deployment.md`). Kerja sekarang di branch `development`.
 
 **Admin Reading sudah jalan** (`apps/admin`, http://localhost:3001/admin): buat tes,
 passage, group soal (7 tipe Reading), soal & jawaban, publish. Konten tes
