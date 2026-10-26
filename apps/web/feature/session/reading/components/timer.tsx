@@ -3,6 +3,9 @@
 import { Clock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+/** Minutes left at which the candidate is warned, like the real test. */
+const WARN_AT_MINUTES = [10, 5];
+
 function formatRemaining(ms: number): string {
   const totalSeconds = Math.ceil(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
@@ -17,23 +20,37 @@ function formatRemaining(ms: number): string {
 export function Timer({
   endsAt,
   onExpire,
+  onWarning,
 }: {
   endsAt: string;
   onExpire: () => void;
+  /** Called once when 10 and 5 minutes are left (not for times already passed on load). */
+  onWarning: (minutesLeft: number) => void;
 }) {
   // Null until mounted, so the server and browser renders match.
   const [remaining, setRemaining] = useState<number | null>(null);
   const onExpireRef = useRef(onExpire);
+  const onWarningRef = useRef(onWarning);
   const expiredRef = useRef(false);
 
   useEffect(() => {
     onExpireRef.current = onExpire;
-  }, [onExpire]);
+    onWarningRef.current = onWarning;
+  }, [onExpire, onWarning]);
 
   useEffect(() => {
+    // Warnings already due when the page loads (e.g. after a refresh) are skipped.
+    const startMs = Date.parse(endsAt) - Date.now();
+    const pending = WARN_AT_MINUTES.filter((minutes) => startMs > minutes * 60_000);
+
     const tick = () => {
       const ms = Math.max(0, Date.parse(endsAt) - Date.now());
       setRemaining(ms);
+      const due = pending.filter((minutes) => ms <= minutes * 60_000);
+      if (due.length > 0) {
+        pending.splice(0, pending.length, ...pending.filter((minutes) => !due.includes(minutes)));
+        if (ms > 0) onWarningRef.current(Math.min(...due));
+      }
       if (ms === 0 && !expiredRef.current) {
         expiredRef.current = true;
         onExpireRef.current();

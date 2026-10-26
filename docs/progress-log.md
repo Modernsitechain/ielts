@@ -272,6 +272,10 @@ Butuh langkah dari developer dulu (token). Detail CI: `docs/ci.md`.
   warna Tailwind di `globals.css`). Disimpan di localStorage. Diuji visual di
   Chrome headless; perbaikan: teks tanpa class warna mewarisi hitam dari
   `<body>`. Berikutnya: Tahap D (polesan).
+- [2026-10-27] Reading Tahap D: pembatas passage/soal bisa digeser (30–70%,
+  mouse atau keyboard, disimpan di pengaturan), peringatan sisa waktu 10 & 5
+  menit, konfirmasi saat menutup/refresh halaman di tengah ujian, tombol Help.
+  Tahap A–D Reading selesai.
 
 ## Yang masih bingung
 <!-- Tulis di sini, Claude akan menjelaskan ulang -->

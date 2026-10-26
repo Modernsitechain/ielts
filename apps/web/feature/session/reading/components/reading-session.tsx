@@ -1,14 +1,17 @@
 "use client";
 
 import {
+  AlarmClock,
   CircleAlert,
   CircleCheck,
+  CircleHelp,
   GraduationCap,
   Highlighter,
   LoaderCircle,
   Send,
   StickyNote,
   Trash2,
+  X,
 } from "lucide-react";
 import {
   type MouseEvent,
@@ -48,6 +51,8 @@ import { ContextMenu, type MenuAction, type MenuPosition } from "../annotations/
 import { clearSelection, highlightAt, readSelection } from "../annotations/selection";
 import { TEXT_SIZE_ZOOM, useExamSettings } from "../settings/exam-settings";
 import { SettingsMenu } from "../settings/settings-menu";
+import { HelpDialog } from "./help-dialog";
+import { PaneDivider } from "./pane-divider";
 import { Passage } from "./passage";
 import { QuestionGroupView } from "./question-group-view";
 import { type NavPart, QuestionNav } from "./question-nav";
@@ -113,6 +118,11 @@ export function ReadingSession({
   const [settings, setSettings] = useExamSettings();
   // Text size scales the passage and questions (text, inputs and spacing).
   const zoom = { zoom: TEXT_SIZE_ZOOM[settings.textSize] };
+  // Passage width while dragging the divider; saved to settings when released.
+  const [draggedWidth, setDraggedWidth] = useState<number | null>(null);
+  const passageWidth = draggedWidth ?? settings.passageWidth;
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [timeWarning, setTimeWarning] = useState<number | null>(null);
 
   // Text of every highlightable block, and the question each block belongs to
   // (paragraphs: the first question of their part), for notes and navigation.
@@ -191,6 +201,21 @@ export function ReadingSession({
     (blocks.get(annotation.blockId) ?? "").slice(annotation.start, annotation.end);
 
   const closeMenu = useCallback(() => setMenu(null), []);
+  const closeHelp = useCallback(() => setHelpOpen(false), []);
+
+  const showTimeWarning = useCallback((minutesLeft: number) => {
+    setTimeWarning(minutesLeft);
+    setTimeout(() => setTimeWarning((current) => (current === minutesLeft ? null : current)), 15_000);
+  }, []);
+
+  // Ask before leaving or reloading mid-test (answers are saved, but the
+  // timer keeps running).
+  useEffect(() => {
+    if (isSubmitting) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [isSubmitting]);
 
   /** Runs a menu action, then closes the menu and drops the text selection. */
   const act = (run: () => void) => () => {
@@ -366,7 +391,15 @@ export function ReadingSession({
             <StickyNote className="h-4 w-4 text-amber-600" aria-hidden />
             Notes{notes.length > 0 && ` (${notes.length})`}
           </button>
-          <Timer endsAt={session.endsAt} onExpire={submit} />
+          <button
+            type="button"
+            onClick={() => setHelpOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50"
+          >
+            <CircleHelp className="h-4 w-4" aria-hidden />
+            Help
+          </button>
+          <Timer endsAt={session.endsAt} onExpire={submit} onWarning={showTimeWarning} />
           <button
             type="button"
             onClick={handleSubmitClick}
@@ -390,18 +423,48 @@ export function ReadingSession({
         </p>
       </div>
 
+      {timeWarning !== null && (
+        <div
+          role="alert"
+          className="flex shrink-0 items-center gap-2 border-b border-amber-200 bg-amber-50 px-6 py-2 text-sm font-medium text-amber-800"
+        >
+          <AlarmClock className="h-4 w-4" aria-hidden />
+          {timeWarning} minutes remaining.
+          <button
+            type="button"
+            onClick={() => setTimeWarning(null)}
+            aria-label="Dismiss"
+            className="ml-auto rounded-md p-1 hover:bg-amber-100"
+          >
+            <X className="h-4 w-4" aria-hidden />
+          </button>
+        </div>
+      )}
+
       <AnnotationsProvider value={annotations}>
         <div
           ref={workspaceRef}
-          className="relative grid min-h-0 flex-1 grid-cols-2"
+          className="relative flex min-h-0 flex-1"
           onContextMenu={openContextMenu}
         >
-          <div className="overflow-y-auto border-r border-slate-200 bg-white px-8 py-8">
+          <div
+            className="shrink-0 overflow-y-auto bg-white px-8 py-8"
+            style={{ width: `${passageWidth}%` }}
+          >
             <div style={zoom}>
               <Passage section={section} />
             </div>
           </div>
-          <div className="overflow-y-auto bg-slate-50/60 px-6 py-8">
+          <PaneDivider
+            containerRef={workspaceRef}
+            passageWidth={passageWidth}
+            onResize={setDraggedWidth}
+            onResizeEnd={(percent) => {
+              setSettings({ ...settings, passageWidth: percent });
+              setDraggedWidth(null);
+            }}
+          />
+          <div className="min-w-0 flex-1 overflow-y-auto bg-slate-50/60 px-6 py-8">
             <div className="space-y-8" style={zoom}>
               {section.groups.map((group) => (
                 <QuestionGroupView
@@ -428,6 +491,8 @@ export function ReadingSession({
           )}
         </div>
       </AnnotationsProvider>
+
+      {helpOpen && <HelpDialog onClose={closeHelp} />}
 
       {menu && <ContextMenu position={menu.position} actions={menu.actions} onClose={closeMenu} />}
 

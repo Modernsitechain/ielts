@@ -155,8 +155,14 @@ Feature saat ini: `home`, `catalog`, `history`, `status`, `session`
     `data-contrast`; `app/globals.css` memetakan ulang variabel warna Tailwind
     (`--color-slate-*`, `--color-white`, …). Warna baru di halaman ujian harus
     memakai warna yang dipetakan di sana, atau ditambahkan ke daftar itu.
+  - Lebar passage (30–70%) diatur dengan `PaneDivider` (drag atau panah
+    kiri/kanan) dan ikut disimpan di pengaturan.
   - Disimpan per browser (`localStorage`, lewat `useSyncExternalStore`), bukan
     di server.
+- Lainnya di sesi ujian: `HelpDialog` (tombol Help; perbarui teksnya jika
+  cara pakai berubah), peringatan sisa waktu 10 & 5 menit (`Timer`
+  `onWarning`, dilewati jika sudah lewat saat halaman dibuka), dan konfirmasi
+  browser saat menutup/refresh halaman sebelum submit.
 
 ## Data & keamanan (wajib)
 

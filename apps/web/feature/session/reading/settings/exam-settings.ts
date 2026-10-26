@@ -13,9 +13,22 @@ export const CONTRASTS = ["standard", "white-on-black", "yellow-on-black"] as co
 export type ExamSettings = {
   textSize: (typeof TEXT_SIZES)[number];
   contrast: (typeof CONTRASTS)[number];
+  /** Width of the passage pane, in % of the screen (the questions get the rest). */
+  passageWidth: number;
 };
 
-export const DEFAULT_SETTINGS: ExamSettings = { textSize: "standard", contrast: "standard" };
+export const MIN_PASSAGE_WIDTH = 30;
+export const MAX_PASSAGE_WIDTH = 70;
+
+export const DEFAULT_SETTINGS: ExamSettings = {
+  textSize: "standard",
+  contrast: "standard",
+  passageWidth: 50,
+};
+
+export function clampPassageWidth(percent: number): number {
+  return Math.round(Math.min(MAX_PASSAGE_WIDTH, Math.max(MIN_PASSAGE_WIDTH, percent)));
+}
 
 /** CSS zoom of the passage and questions per text size. */
 export const TEXT_SIZE_ZOOM: Record<ExamSettings["textSize"], number> = {
@@ -43,7 +56,11 @@ function parse(raw: string | null): ExamSettings {
     const value = JSON.parse(raw ?? "{}") as Partial<ExamSettings>;
     const textSize = TEXT_SIZES.find((size) => size === value.textSize) ?? "standard";
     const contrast = CONTRASTS.find((option) => option === value.contrast) ?? "standard";
-    return { textSize, contrast };
+    const passageWidth =
+      typeof value.passageWidth === "number" && Number.isFinite(value.passageWidth)
+        ? clampPassageWidth(value.passageWidth)
+        : DEFAULT_SETTINGS.passageWidth;
+    return { textSize, contrast, passageWidth };
   } catch {
     return DEFAULT_SETTINGS;
   }
