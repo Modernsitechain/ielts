@@ -63,8 +63,9 @@ apps/api/
 - `common/`: hanya untuk kode yang dipakai ≥ 2 module (contoh nanti:
   `AuthGuard` WorkOS, `RolesGuard`, pipe validasi Zod).
 - `tests.repository.ts` memakai **PostgreSQL** (Drizzle, skema di
-  `packages/db`). `attempts.repository.ts` masih **in-memory** (`Map`, hilang
-  saat restart) sampai tabel attempt dibuat.
+  `packages/db`). `attempts.repository.ts` juga PostgreSQL
+  (tabel `attempts` + `attempt_answers`). Skor disimpan saat submit; hasil lama
+  memakai skor tersimpan walaupun tes diedit kemudian.
 - Satu repository untuk tabel konten tes (`TestsRepository`), dipakai module
   `tests`, `attempts`, dan `admin-tests` (di-`exports` oleh `TestsModule`).
   Method untuk peserta mengembalikan `TestRecord`; method admin mengembalikan

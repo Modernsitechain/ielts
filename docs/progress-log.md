@@ -75,6 +75,27 @@ catatan sesi 2026-10-24.
 - Cara konten buatan admin (lokal) sampai ke production: deploy admin setelah
   WorkOS, atau export/import
 
+## Backlog fitur admin (permintaan developer, 2026-10-27; belum dikerjakan)
+
+Arah admin: **pusat rekap**, bukan hanya editor konten.
+
+1. **Dashboard rekap semua attempt dari semua user**: jumlah attempt, peserta
+   aktif, rata-rata skor/band, attempt terbaru, dan tes yang paling sering
+   dikerjakan (melengkapi rekap konten tes yang sudah ada).
+2. **Menu Tests menjadi dropdown** di sidebar:
+   - **All tests**: daftar tes (konten) seperti sekarang.
+   - **Attempts** (hasil peserta): tabel berisi email user, tes yang
+     dikerjakan, mode, skor/band, waktu submit atau status "in progress",
+     dan bisa dibuka untuk melihat detail jawaban.
+
+Catatan teknis:
+- Datanya sudah ada di tabel `attempts` + `attempt_answers` + `users`
+  (sejak 2026-10-27).
+- Butuh endpoint baru di API, misalnya `GET /admin/attempts` (filter per tes,
+  per user, paginasi) dan `GET /admin/stats`, dilindungi role `editor`/`admin`.
+- Perlu diputuskan: apakah editor boleh melihat data peserta (email), atau
+  hanya admin (data pribadi).
+
 ## Catatan per sesi
 <!-- Format: [tanggal] apa yang dikerjakan / dipelajari -->
 - [YYYY-MM-DD] Menyusun roadmap, project brief, dan domain knowledge
@@ -198,6 +219,14 @@ catatan sesi 2026-10-24.
   `RUN_AND_BUILD_TIME`), `ADMIN_API_KEY` & Basic Auth dihapus dari app.
   `.do/production.yaml` diberi placeholder WorkOS Production.
   `docs/deployment.md` diperbarui (langkah WorkOS, redirect di dashboard).
+- [2026-10-27] Attempt pindah ke PostgreSQL: tabel `attempts` +
+  `attempt_answers` (migrasi `0002_attempts`). Skor & benar/salah disimpan saat
+  submit; `question_id` tanpa FK; tes yang punya attempt tidak bisa dihapus
+  (RESTRICT, API 409); `seedDemoTests` jadi upsert. Submit ganda ditolak secara
+  atomik. Riwayat memakai skor tersimpan (satu query, bukan menilai ulang).
+  Unit test memakai repository palsu; e2e baru membuktikan data tetap ada
+  setelah API di-restart. Belum: daftar attempt "sedang dikerjakan",
+  menyelesaikan otomatis attempt yang lewat deadline.
 
 ## Yang masih bingung
 <!-- Tulis di sini, Claude akan menjelaskan ulang -->

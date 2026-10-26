@@ -11,7 +11,9 @@ import {
   index,
   integer,
   jsonb,
+  numeric,
   pgEnum,
+  primaryKey,
   pgTable,
   text,
   timestamp,
@@ -19,7 +21,8 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-// Test content: tests → sections → question_groups → questions. Users below.
+// Test content: tests → sections → question_groups → questions. Users and
+// attempts below.
 // Changing this file? Run `pnpm db:generate` to create a migration, review the
 // SQL in drizzle/, then `pnpm db:migrate`. See packages/db/AGENTS.md.
 //
@@ -123,6 +126,66 @@ export const users = pgTable("users", {
   ...timestamps,
 });
 
+// Attempts: one row per test session, answers in attempt_answers. Times and
+// scores are decided by apps/api; scores are stored at submission, so later
+// edits to a test don't change past results.
+export const attemptModeEnum = pgEnum("attempt_mode", ["exam", "practice"]);
+
+export const attempts = pgTable(
+  "attempts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** RESTRICT: a test with attempts can't be deleted (candidates' history). */
+    testId: text("test_id")
+      .notNull()
+      .references(() => tests.id, { onDelete: "restrict" }),
+    mode: attemptModeEnum("mode").notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+    /** Deadline set by the server when the attempt starts. */
+    endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+    /** Null while the attempt is in progress. */
+    submittedAt: timestamp("submitted_at", { withTimezone: true }),
+    // Filled at submission.
+    rawScore: integer("raw_score"),
+    totalQuestions: integer("total_questions"),
+    /** Null when no band applies (e.g. a test with fewer than 40 questions). */
+    band: numeric("band", { precision: 3, scale: 1, mode: "number" }),
+    ...timestamps,
+  },
+  (table) => [
+    check("attempts_ends_after_start", sql`${table.endsAt} > ${table.startedAt}`),
+    check(
+      "attempts_scored_when_submitted",
+      sql`${table.submittedAt} IS NULL OR (${table.rawScore} IS NOT NULL AND ${table.totalQuestions} IS NOT NULL)`,
+    ),
+    // History: a user's attempts, newest submission first.
+    index("attempts_user_submitted_idx").on(table.userId, table.submittedAt),
+    // Admin delete check and future stats per test.
+    index("attempts_test_idx").on(table.testId),
+  ],
+);
+
+export const attemptAnswers = pgTable(
+  "attempt_answers",
+  {
+    attemptId: uuid("attempt_id")
+      .notNull()
+      .references(() => attempts.id, { onDelete: "cascade" }),
+    /**
+     * No foreign key to questions on purpose: editing a test may delete
+     * questions, and past answers must survive that.
+     */
+    questionId: text("question_id").notNull(),
+    value: text("value").notNull(),
+    /** Set at submission. */
+    isCorrect: boolean("is_correct"),
+  },
+  (table) => [primaryKey({ columns: [table.attemptId, table.questionId] })],
+);
+
 // Relations let apps/api load a whole test in one query (`db.query.tests`).
 // They don't change the database; foreign keys above do.
 
@@ -142,4 +205,12 @@ export const questionGroupsRelations = relations(questionGroups, ({ one, many })
 
 export const questionsRelations = relations(questions, ({ one }) => ({
   group: one(questionGroups, { fields: [questions.groupId], references: [questionGroups.id] }),
+}));
+
+export const attemptsRelations = relations(attempts, ({ many }) => ({
+  answers: many(attemptAnswers),
+}));
+
+export const attemptAnswersRelations = relations(attemptAnswers, ({ one }) => ({
+  attempt: one(attempts, { fields: [attemptAnswers.attemptId], references: [attempts.id] }),
 }));

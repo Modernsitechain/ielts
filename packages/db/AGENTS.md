@@ -65,8 +65,32 @@ Identitas (siapa user ini) dari WorkOS; **role milik kita** dan dicek di API.
 Baris dibuat otomatis oleh API saat request pertama user yang login. Nilai enum
 role berasal dari `USER_ROLES` di `@ielts-mock/question-schema`.
 
-Belum ada tabel `attempts`, `purchases`, dll. Attempt masih disimpan di memori
-`apps/api`.
+## Tabel attempt
+
+```
+users ──< attempts ──< attempt_answers
+tests ──< attempts
+```
+
+| Tabel             | Isi penting                                                                 |
+| ----------------- | --------------------------------------------------------------------------- |
+| `attempts`        | `user_id` (CASCADE), `test_id` (**RESTRICT**), `mode` (enum `exam`/`practice`), `started_at`, `ends_at` (CHECK > started_at), `submitted_at` (null = sedang dikerjakan), `raw_score`, `total_questions`, `band` (diisi saat submit; CHECK: wajib ada jika sudah submit) |
+| `attempt_answers` | PK (`attempt_id`, `question_id`), `value`, `is_correct` (diisi saat submit) |
+
+Alasan desain:
+- **Skor disimpan saat submit**, bukan dihitung ulang: mengedit tes kemudian
+  tidak mengubah hasil lama, dan riwayat tidak perlu menilai ulang semua tes.
+- **`question_id` tanpa foreign key** ke `questions`: editor admin bisa
+  menghapus soal; jawaban lama harus tetap ada.
+- **`test_id` RESTRICT**: tes yang sudah dikerjakan peserta tidak bisa dihapus
+  (API menjawab 409). Karena itu `seedDemoTests` memperbarui baris tes demo
+  (upsert) dan hanya mengganti isinya, tidak menghapus tesnya.
+- Hapus user → attempt & jawabannya ikut terhapus (CASCADE).
+- Index `(user_id, submitted_at)` untuk halaman riwayat, `(test_id)` untuk cek
+  hapus tes.
+
+Belum ada: `annotations` (dibuat bersama fitur highlight), `purchases`,
+`payment_events`.
 
 ## Perintah (dari root repo)
 

@@ -1,8 +1,13 @@
 import { ConflictException, NotFoundException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 
+import { randomUUID } from "node:crypto";
+
+import type { AttemptSummary } from "@ielts-mock/question-schema";
+
 import type { TestRecord } from "../tests/test-record";
 import { TestsRepository } from "../tests/tests.repository";
+import type { AttemptRecord, AttemptScore, NewAttempt } from "./attempt-record";
 import { AttemptsRepository } from "./attempts.repository";
 import { AttemptsService, DEADLINE_GRACE_MS } from "./attempts.service";
 
@@ -68,21 +73,67 @@ const fakeTestsRepository: Pick<TestsRepository, "findById"> = {
   findById: async (id) => storedTests[id] ?? null,
 };
 
+/** In-memory stand-in for the PostgreSQL repository. */
+class FakeAttemptsRepository
+  implements Pick<AttemptsRepository, "create" | "findById" | "saveAnswers" | "submit" | "findSubmittedSummaries">
+{
+  readonly rows = new Map<string, AttemptRecord>();
+
+  async create(attempt: NewAttempt): Promise<AttemptRecord> {
+    const record: AttemptRecord = { ...attempt, id: randomUUID(), submittedAt: null, answers: {}, score: null };
+    this.rows.set(record.id, record);
+    return structuredClone(record);
+  }
+
+  async findById(id: string): Promise<AttemptRecord | null> {
+    const record = this.rows.get(id);
+    return record ? structuredClone(record) : null;
+  }
+
+  async saveAnswers(id: string, answers: Record<string, string>): Promise<void> {
+    const record = this.rows.get(id);
+    if (record) record.answers = { ...answers };
+  }
+
+  async submit(id: string, answers: Record<string, string>, score: AttemptScore, submittedAt: string) {
+    const record = this.rows.get(id);
+    if (!record || record.submittedAt) return false;
+    Object.assign(record, { answers: { ...answers }, score, submittedAt });
+    return true;
+  }
+
+  async findSubmittedSummaries(userId: string): Promise<AttemptSummary[]> {
+    return [...this.rows.values()]
+      .filter((record) => record.userId === userId && record.score && record.submittedAt)
+      .map((record) => ({
+        id: record.id,
+        testId: record.testId,
+        testTitle: storedTests[record.testId]?.title ?? "",
+        skill: "reading" as const,
+        mode: record.mode,
+        submittedAt: record.submittedAt ?? "",
+        rawScore: record.score?.rawScore ?? 0,
+        totalQuestions: record.score?.totalQuestions ?? 0,
+        band: record.score?.band ?? null,
+      }));
+  }
+}
+
 describe("AttemptsService", () => {
   let service: AttemptsService;
-  let attempts: AttemptsRepository;
+  let attempts: FakeAttemptsRepository;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
         AttemptsService,
-        AttemptsRepository,
+        { provide: AttemptsRepository, useClass: FakeAttemptsRepository },
         { provide: TestsRepository, useValue: fakeTestsRepository },
       ],
     }).compile();
 
     service = moduleRef.get(AttemptsService);
-    attempts = moduleRef.get(AttemptsRepository);
+    attempts = moduleRef.get(AttemptsRepository) as unknown as FakeAttemptsRepository;
   });
 
   afterEach(() => {
@@ -139,14 +190,36 @@ describe("AttemptsService", () => {
     expect(await attempts.findById(id)).not.toBeNull();
   });
 
-  it("leaves attempts on missing tests out of the history", async () => {
+  it("stores the score at submission and lists it in the history", async () => {
+    const { id } = await service.start(USER, READING_TEST, "exam");
+    await service.submit(USER, id, { "r1-q1": "TRUE", "r1-q2": "FALSE" });
+
+    expect(attempts.rows.get(id)?.score).toMatchObject({
+      rawScore: 1,
+      totalQuestions: 4,
+      correct: { "r1-q1": true, "r1-q2": false },
+    });
+    expect(await service.listSubmitted(USER)).toMatchObject([{ id, rawScore: 1, totalQuestions: 4 }]);
+  });
+
+  it("keeps a past result when the answer key changes later", async () => {
     const { id } = await service.start(USER, READING_TEST, "exam");
     await service.submit(USER, id, { "r1-q1": "TRUE" });
-    await attempts.create({ ...(await attempts.findById(id))!, id: "gone", testId: "deleted-test" });
 
-    const history = await service.listSubmitted(USER);
+    storedTests[READING_TEST] = { ...readingTest, answerKey: { ...readingTest.answerKey, "r1-q1": ["FALSE"] } };
+    try {
+      const result = await service.getResult(USER, id);
+      expect(result.rawScore).toBe(1);
+      expect(result.items.find((item) => item.questionId === "r1-q1")?.isCorrect).toBe(true);
+    } finally {
+      storedTests[READING_TEST] = readingTest;
+    }
+  });
 
-    expect(history.map((summary) => summary.id)).toEqual([id]);
+  it("rejects a second submit", async () => {
+    const { id } = await service.start(USER, READING_TEST, "exam");
+    await service.submit(USER, id, {});
+    await expect(service.submit(USER, id, {})).rejects.toBeInstanceOf(ConflictException);
   });
 
   it("hides attempts from other users", async () => {

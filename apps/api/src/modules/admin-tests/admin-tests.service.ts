@@ -72,7 +72,11 @@ export class AdminTestsService {
     if (test.status === "published") {
       throw new ConflictException("Unpublish the test before deleting it");
     }
-    await this.testsRepository.delete(id);
+    if (!(await this.testsRepository.delete(id))) {
+      throw new ConflictException(
+        "Candidates have taken this test, so it can't be deleted. Keep it as a draft instead.",
+      );
+    }
   }
 
   private assertEditable(test: AdminTest): void {

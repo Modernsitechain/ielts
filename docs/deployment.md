@@ -201,7 +201,7 @@ database. Cek harga terbaru di situs DigitalOcean.
 - **Konten production**: admin belum di-deploy ke production. Pilihan: tambah
   komponen admin di `.do/production.yaml` (sudah ada login WorkOS) atau
   export/import dari development. Belum diputuskan.
-- Attempt masih disimpan di memori API: hilang setiap deploy/restart.
+- Attempt tersimpan di PostgreSQL (sejak migrasi `0002_attempts`).
 - `/api` publik di development hanya untuk `pnpm dev:remote`. Endpoint yang
   butuh login tetap wajib token WorkOS.
 - GitHub Actions: typecheck & test harus lolos sebelum deploy.

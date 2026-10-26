@@ -24,6 +24,12 @@ import type {
 import { DATABASE, type Database } from "../../database/database.module";
 import type { TestRecord } from "./test-record";
 
+/** PostgreSQL foreign_key_violation; Drizzle wraps the driver error in `cause`. */
+function isForeignKeyViolation(error: unknown): boolean {
+  const code = (value: unknown) => (value as { code?: unknown } | null)?.code;
+  return code(error) === "23503" || code((error as { cause?: unknown } | null)?.cause) === "23503";
+}
+
 /** Loads one or more tests with all their content, in order. */
 function loadTests(db: Pick<Database, "query">, where?: SQL) {
   return db.query.tests.findMany({
@@ -251,7 +257,17 @@ export class TestsRepository {
       .where(eq(tests.id, id));
   }
 
-  async delete(id: string): Promise<void> {
-    await this.db.delete(tests).where(eq(tests.id, id));
+  /**
+   * Deletes a test with its content. Returns false when candidates have
+   * attempts on it (attempts.test_id is ON DELETE RESTRICT).
+   */
+  async delete(id: string): Promise<boolean> {
+    try {
+      await this.db.delete(tests).where(eq(tests.id, id));
+      return true;
+    } catch (error) {
+      if (isForeignKeyViolation(error)) return false;
+      throw error;
+    }
   }
 }

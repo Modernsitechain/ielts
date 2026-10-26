@@ -44,7 +44,7 @@ describe("AdminTestsService", () => {
     findAdminById: jest.fn(async () => stored),
     replaceContent: jest.fn(async () => undefined),
     setStatus: jest.fn(async () => undefined),
-    delete: jest.fn(async () => undefined),
+    delete: jest.fn(async () => true),
   };
 
   beforeEach(async () => {
@@ -102,5 +102,11 @@ describe("AdminTestsService", () => {
     stored = completeDraft;
     await service.remove("t1");
     expect(repository.delete).toHaveBeenCalledWith("t1");
+  });
+
+  it("refuses to delete a test that has attempts", async () => {
+    stored = completeDraft;
+    repository.delete.mockResolvedValueOnce(false);
+    await expect(service.remove("t1")).rejects.toBeInstanceOf(ConflictException);
   });
 });

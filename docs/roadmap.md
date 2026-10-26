@@ -121,6 +121,8 @@ Target: MVP live dalam ±12–14 minggu (1–2 jam/hari).
 - Form dinamis per tipe soal di admin (form berbeda untuk tiap `type`)
 - Upload audio Listening & gambar (diagram/peta) via signed URL dari API
 - Status draft/published + preview "tampilan peserta"
+- Admin sebagai pusat rekap hasil peserta (backlog, lihat
+  `progress-log.md` → "Backlog fitur admin")
 
 **Dipelajari:**
 

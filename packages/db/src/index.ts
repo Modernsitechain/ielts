@@ -10,6 +10,6 @@ export * as schema from "./schema.js";
 // apps/api imports drizzle from here, never from "drizzle-orm" directly:
 // apps/api is CommonJS and would otherwise load a second copy of drizzle-orm
 // (its CJS build) whose types don't match the schema's.
-export { asc, desc, eq, inArray, type SQL, sql } from "drizzle-orm";
+export { and, asc, desc, eq, inArray, isNotNull, isNull, type SQL, sql } from "drizzle-orm";
 export { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 export { migrate } from "drizzle-orm/node-postgres/migrator";

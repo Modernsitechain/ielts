@@ -1,5 +1,3 @@
-import { randomUUID } from "node:crypto";
-
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import {
   type AttemptMode,
@@ -13,7 +11,7 @@ import {
 
 import type { TestRecord } from "../tests/test-record";
 import { TestsRepository } from "../tests/tests.repository";
-import type { AttemptRecord } from "./attempt-record";
+import type { AttemptRecord, AttemptScore } from "./attempt-record";
 import { AttemptsRepository } from "./attempts.repository";
 
 /** Allowance for network delay when the client auto-submits in the last second. */
@@ -41,25 +39,35 @@ function sanitizeAnswers(test: TestRecord, answers: Record<string, string>) {
   return result;
 }
 
+/**
+ * Grades an attempt against the test's current content. For a submitted
+ * attempt, the score and correctness stored at submission win, so editing the
+ * test later doesn't change a past result.
+ */
 function grade(attempt: AttemptRecord, test: TestRecord, submittedAt: string): AttemptResult {
+  const stored = attempt.score;
   const items: ResultItem[] = test.sections.flatMap((section) =>
     section.groups.flatMap((group) =>
       group.questions.map((question) => {
         const given = attempt.answers[question.id] ?? null;
         const accepted = test.answerKey[question.id] ?? [];
+        const isCorrect = stored
+          ? (stored.correct[question.id] ?? false)
+          : isAnswerCorrect(group.payload, given, accepted);
         return {
           questionId: question.id,
           number: question.number,
           prompt: question.prompt,
           given,
           accepted,
-          isCorrect: isAnswerCorrect(group.payload, given, accepted),
+          isCorrect,
         };
       }),
     ),
   );
 
-  const rawScore = items.filter((item) => item.isCorrect).length;
+  const rawScore = stored?.rawScore ?? items.filter((item) => item.isCorrect).length;
+  const totalQuestions = stored?.totalQuestions ?? items.length;
   return {
     id: attempt.id,
     testId: test.id,
@@ -68,9 +76,19 @@ function grade(attempt: AttemptRecord, test: TestRecord, submittedAt: string): A
     mode: attempt.mode,
     submittedAt,
     rawScore,
-    totalQuestions: items.length,
-    band: rawScoreToBand(test.skill, rawScore, items.length),
+    totalQuestions,
+    band: stored ? stored.band : rawScoreToBand(test.skill, rawScore, totalQuestions),
     items,
+  };
+}
+
+/** What is stored at submission. */
+function toScore(result: AttemptResult): AttemptScore {
+  return {
+    rawScore: result.rawScore,
+    totalQuestions: result.totalQuestions,
+    band: result.band,
+    correct: Object.fromEntries(result.items.map((item) => [item.questionId, item.isCorrect])),
   };
 }
 
@@ -95,14 +113,11 @@ export class AttemptsService {
     const endsAt = new Date(startedAt.getTime() + test.durationMinutes * 60_000);
 
     const attempt = await this.attemptsRepository.create({
-      id: randomUUID(),
       userId,
       testId: test.id,
       mode,
       startedAt: startedAt.toISOString(),
       endsAt: endsAt.toISOString(),
-      submittedAt: null,
-      answers: {},
     });
     return toSession(attempt);
   }
@@ -118,7 +133,7 @@ export class AttemptsService {
     if (this.isPastDeadline(attempt)) throw new ConflictException("Time is up");
 
     const test = await this.requireTest(attempt.testId);
-    await this.attemptsRepository.update(id, { answers: sanitizeAnswers(test, answers) });
+    await this.attemptsRepository.saveAnswers(id, sanitizeAnswers(test, answers));
   }
 
   /**
@@ -134,9 +149,10 @@ export class AttemptsService {
       ? attempt.answers
       : sanitizeAnswers(test, answers);
     const submittedAt = new Date().toISOString();
-    await this.attemptsRepository.update(id, { answers: finalAnswers, submittedAt });
-
-    return grade({ ...attempt, answers: finalAnswers }, test, submittedAt);
+    const result = grade({ ...attempt, answers: finalAnswers, score: null }, test, submittedAt);
+    const stored = await this.attemptsRepository.submit(id, finalAnswers, toScore(result), submittedAt);
+    if (!stored) throw new ConflictException("Attempt already submitted");
+    return result;
   }
 
   async getResult(userId: string, id: string): Promise<AttemptResult> {
@@ -145,23 +161,9 @@ export class AttemptsService {
     return grade(attempt, await this.requireTest(attempt.testId), attempt.submittedAt);
   }
 
-  /**
-   * The user's submitted attempts, newest first. Attempts whose test no longer exists
-   * (e.g. deleted in the admin) are left out instead of failing the list.
-   */
+  /** The user's submitted attempts with their stored scores, newest first. */
   async listSubmitted(userId: string): Promise<AttemptSummary[]> {
-    const attempts = await this.attemptsRepository.findSubmittedByUser(userId);
-    const summaries = await Promise.all(
-      attempts.map(async (attempt) => {
-        const test = await this.testsRepository.findById(attempt.testId);
-        if (!test || !attempt.submittedAt) return null;
-        const { items: _items, ...summary } = grade(attempt, test, attempt.submittedAt);
-        return summary;
-      }),
-    );
-    return summaries
-      .filter((summary) => summary !== null)
-      .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+    return this.attemptsRepository.findSubmittedSummaries(userId);
   }
 
   private isPastDeadline(attempt: AttemptRecord): boolean {
