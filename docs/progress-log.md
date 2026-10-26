@@ -1,17 +1,22 @@
 # Progress Log
 
 ## Status saat ini
-Fase: 1 (Fondasi project & AI tooling) — minggu ke-1
+Fase: 1 → sebagian Fase 2 & 3 (database konten + admin Reading) — minggu ke-1
 
 **Lanjut dari sini:** rencana deploy web & api ke DigitalOcean (Docker)
 sudah disusun di `docs/deployment.md`, belum dikerjakan. Mulai dari bagian "Keputusan yang
 perlu diambil" di file itu.
 
-**Sedang belajar PostgreSQL** (sebelum Fase 2), 6 sesi: 1) dasar & `psql`,
-2) relasi & JOIN, 3) constraint, 4) JSONB, 5) index & transaksi, 6) migrasi &
-Drizzle. Database latihan: `ielts_sandbox`. Posisi: **sesi 1** (tabel `tests`,
-INSERT/SELECT; latihan: filter berbayar, UPDATE durasi, INSERT tanpa title).
-Listening & audio ditunda; rekomendasi audio ada di catatan sesi 2026-10-24.
+**Admin Reading sudah jalan di lokal** (`apps/admin`, port 3001): buat tes,
+passage, group soal (7 tipe Reading), soal & jawaban, publish. Konten tes
+tersimpan di PostgreSQL (`packages/db`). Langkah berikut: developer mencoba
+admin, me-review skema tabel (`packages/db/AGENTS.md`), lalu commit. Setelah
+itu: konten tes asli, tabel attempt, atau deploy.
+
+Belajar PostgreSQL (6 sesi, database `ielts_sandbox`) ditunda; skema konten
+tes (`packages/db/src/schema.ts`) bisa dipakai sebagai bahan belajar relasi,
+constraint, dan JSONB. Listening & audio ditunda; rekomendasi audio ada di
+catatan sesi 2026-10-24.
 
 ## Keputusan yang sudah diambil
 - Produk: SaaS mock test IELTS Reading & Listening (lihat project-brief.md)
@@ -20,7 +25,9 @@ Listening & audio ditunda; rekomendasi audio ada di catatan sesi 2026-10-24.
 - Backend: NestJS, termasuk test bawaannya (Jest) untuk `apps/api`
 - AI tooling: Claude Code (terminal, agent utama) + Antigravity (editor & review)
 - Database: PostgreSQL + Drizzle; development memakai PostgreSQL lokal
-- Auth: WorkOS (AuthKit)
+- Auth: WorkOS (AuthKit). Sampai terpasang, endpoint admin dilindungi kunci
+  sementara `ADMIN_API_KEY` dan hanya aktif di `APP_ENV=local`; admin tidak
+  di-deploy sebelum WorkOS
 - Commit message: `<type>: <ringkasan>` dalam bahasa Inggris; type hanya
   `feat` atau `fix`. Perintah `/axl commit` & `/axl push` di
   `.claude/skills/axl/SKILL.md`
@@ -31,6 +38,10 @@ Listening & audio ditunda; rekomendasi audio ada di catatan sesi 2026-10-24.
   deploy pertama semua kerja di `main`; pindah ke `development` menunggu
   aba-aba developer. Detail: `docs/environments.md`
 - Runtime: Node 24 LTS (`.nvmrc`); dibutuhkan Jest untuk NestJS 12 (ESM)
+- Admin: fokus Reading dulu. Passage disimpan sebagai daftar paragraf
+  berlabel (A, B, C…). Tes published read-only (unpublish untuk edit); publish
+  ditolak jika belum lengkap (`checkPublishReadiness`). Tes Listening demo tetap
+  lewat seed, tidak bisa diedit di admin
 - Pembayaran: Midtrans Snap, model paket akses (bukan auto-renewal dulu)
 - Soal harus orisinal; ada disclaimer tidak berafiliasi dengan IELTS
 - Bahasa: seluruh isi aplikasi (teks UI, pesan error, konten soal, comment
@@ -112,6 +123,17 @@ Listening & audio ditunda; rekomendasi audio ada di catatan sesi 2026-10-24.
   rekaman/TTS berlisensi; MP3/M4A mono 64–96 kbps, satu file per part; simpan
   di DigitalOcean Spaces + signed URL (belum diputuskan). Mulai belajar
   PostgreSQL sesi 1.
+- [2026-10-26] Membuat admin Reading. `packages/question-schema`: skema Zod
+  konten tes, 4 tipe baru (Yes/No/Not Given, matching headings, matching
+  information, summary completion), `checkPublishReadiness` + test Vitest.
+  `packages/db` (baru): tabel `tests`, `sections`, `question_groups`,
+  `questions` (Drizzle, migrasi pertama, seed 2 tes demo). API: repository tes
+  pindah ke PostgreSQL, endpoint peserta hanya mengembalikan tes published,
+  module `admin-tests` (`/admin/tests` CRUD + publish/unpublish) dengan
+  `AdminKeyGuard` sementara, unit test + e2e. `apps/admin` (baru, port 3001):
+  daftar tes, buat tes, editor lengkap. `apps/web`: passage dari daftar
+  paragraf dan tampilan 4 tipe soal baru. Varian jawaban "50 000" di demo
+  dihapus karena dianggap melebihi batas kata.
 
 ## Yang masih bingung
 <!-- Tulis di sini, Claude akan menjelaskan ulang -->
@@ -123,3 +145,5 @@ Listening & audio ditunda; rekomendasi audio ada di catatan sesi 2026-10-24.
   (lihat aturan Tailwind v4 di `apps/web/AGENTS.md`)
 - Menyusun rencana tanpa membaca `docs/` lebih dulu → rencana melenceng
   dari arsitektur (lupa `apps/api`)
+- Mengimpor `drizzle-orm` langsung di `apps/api` (CommonJS) → dua salinan
+  drizzle, tipe tidak cocok. Impor lewat `@ielts-mock/db`

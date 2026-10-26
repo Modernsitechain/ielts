@@ -1,12 +1,21 @@
 # packages/question-schema — Panduan
 
 Satu sumber kebenaran untuk model soal/tes/attempt dan fungsi penilaian,
-dipakai oleh `apps/api`, `apps/web`, dan nanti `apps/admin`.
+dipakai oleh `apps/api`, `apps/web`, dan `apps/admin`.
 
 ## Isi
 
-- `src/test.ts` — Skill, TestSummary, TestDetail, Section, QuestionGroup,
-  Question, GroupPayload (discriminated union per tipe soal), AnswerKey.
+- `src/authoring.ts` — **skema Zod** konten tes: `groupPayloadSchema`
+  (discriminated union per tipe soal), paragraf, opsi, `testInputSchema`
+  (body PUT admin), `createTestSchema`. Tipe `GroupPayload`, `Paragraph`,
+  `ChoiceOption`, `TestInput` di-infer dari skema ini. Juga `FIXED_CHOICES`
+  dan `isCompletionType`.
+- `src/test.ts` — tipe publik: Skill, TestStatus, TestSummary, TestDetail,
+  Section (dengan `paragraphs`), QuestionGroup, Question, AnswerKey.
+- `src/admin.ts` — tipe response `/admin/*` (memuat jawaban): AdminTest,
+  AdminTestSummary, AdminSection, AdminGroup, AdminQuestion.
+- `src/publish.ts` — `checkPublishReadiness`: syarat sebelum tes boleh
+  publish (dipakai API untuk menolak, admin untuk menampilkan checklist).
 - `src/attempt.ts` — AttemptSession, AttemptSummary, AttemptResult, ResultItem.
 - `src/scoring.ts` — fungsi murni: normalisasi jawaban, batas kata, cek
   jawaban, konversi raw score → band (tabel = konfigurasi).
@@ -15,14 +24,16 @@ dipakai oleh `apps/api`, `apps/web`, dan nanti `apps/admin`.
 ## Aturan
 
 - **Murni**: tanpa NestJS, Next.js, database, atau akses jaringan. Hanya
-  TypeScript (dan nanti Zod).
+  TypeScript dan Zod.
 - Tipe publik tidak boleh berisi kunci jawaban; `AnswerKey` terpisah dan
-  hanya dipakai server (`apps/api`).
-- Menambah tipe soal: tambah varian di `GroupPayload`, tangani di
-  `isAnswerCorrect`, lalu kompiler akan menunjukkan setiap `switch` di app
-  yang perlu diperbarui.
-- Fase 2: tambah skema Zod per tipe soal & unit test (Vitest) untuk setiap
-  tipe di `scoring.ts`.
+  hanya dipakai server (`apps/api`). Tipe di `admin.ts` hanya untuk admin.
+- Draft boleh belum lengkap: skema Zod hanya mengecek bentuk & ukuran;
+  kelengkapan dicek `checkPublishReadiness` saat publish.
+- Menambah tipe soal: tambah varian di `groupPayloadSchema`, tangani di
+  `isAnswerCorrect` dan `checkPublishReadiness`, lalu kompiler akan
+  menunjukkan setiap `switch` di app yang perlu diperbarui.
+- Unit test: Vitest, file `src/*.test.ts` (`pnpm test`). Sudah ada untuk
+  `checkPublishReadiness`; belum untuk setiap tipe di `scoring.ts`.
 - Kode & comment dalam bahasa Inggris (British).
 
 ## Build

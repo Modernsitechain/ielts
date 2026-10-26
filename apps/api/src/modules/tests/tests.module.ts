@@ -7,7 +7,8 @@ import { TestsService } from "./tests.service";
 @Module({
   controllers: [TestsController],
   providers: [TestsService, TestsRepository],
-  // The attempts module needs answer keys for grading, so it reads the repository.
+  // Attempts need answer keys for grading and admin-tests manages content,
+  // so both use the repository directly.
   exports: [TestsRepository],
 })
 export class TestsModule {}

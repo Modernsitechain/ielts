@@ -32,10 +32,13 @@ apps/api/
 │   ├── database/
 │   │   └── database.module.ts  # koneksi PostgreSQL + Drizzle (global)
 │   ├── common/               # dipakai lintas module: guard, filter, pipe, decorator
+│   │   ├── guards/admin-key.guard.ts     # SEMENTARA: kunci admin sampai WorkOS
 │   │   └── pipes/zod-validation.pipe.ts  # validasi body/params dengan Zod
 │   └── modules/
 │       ├── health/           # GET /health (cek database)
-│       ├── tests/            # GET /tests, GET /tests/:id (tanpa kunci jawaban)
+│       ├── tests/            # GET /tests, GET /tests/:id (hanya published, tanpa kunci jawaban)
+│       │                     # + TestsRepository: satu-satunya query tabel konten tes
+│       ├── admin-tests/      # /admin/tests: CRUD, publish, unpublish (untuk apps/admin)
 │       ├── attempts/         # mulai, autosave, submit, hasil, riwayat
 │       └── <fitur>/          # pola umum satu fitur:
 │           ├── <fitur>.module.ts
@@ -53,15 +56,21 @@ apps/api/
   lain hanya memakai fitur ini lewat service yang di-`exports`.
 - `common/`: hanya untuk kode yang dipakai ≥ 2 module (contoh nanti:
   `AuthGuard` WorkOS, `RolesGuard`, pipe validasi Zod).
-- Repository saat ini **in-memory** (`tests.repository.ts` membaca demo di
-  `modules/tests/data/`, `attempts.repository.ts` menyimpan di `Map`, hilang
-  saat restart). Di Fase 2 isinya diganti query Drizzle; method & signature
-  tetap, jadi service & controller tidak berubah.
+- `tests.repository.ts` memakai **PostgreSQL** (Drizzle, skema di
+  `packages/db`). `attempts.repository.ts` masih **in-memory** (`Map`, hilang
+  saat restart) sampai tabel attempt dibuat.
+- Satu repository untuk tabel konten tes (`TestsRepository`), dipakai module
+  `tests`, `attempts`, dan `admin-tests` (di-`exports` oleh `TestsModule`).
+  Method untuk peserta mengembalikan `TestRecord`; method admin mengembalikan
+  `AdminTest`.
 - Tipe publik (TestDetail, AttemptResult, dll.) dan fungsi penilaian murni
   berasal dari `@ielts-mock/question-schema`. Tipe yang memuat kunci jawaban
   (`TestRecord`) hanya ada di api dan tidak pernah dikembalikan controller.
-- `database/`: koneksi saja. Skema tabel, migrasi, dan seed akan tinggal di
-  `packages/db` (Fase 2) dan hanya boleh di-import oleh `apps/api`.
+- `database/`: koneksi saja. Skema tabel, migrasi, dan seed ada di
+  `packages/db` (lihat `packages/db/AGENTS.md`).
+- Import drizzle (`eq`, `asc`, `sql`, `drizzle`, …) **dari `@ielts-mock/db`**,
+  jangan dari `drizzle-orm` langsung (app ini CommonJS; impor langsung memuat
+  salinan drizzle kedua yang tipenya tidak cocok dengan skema).
 - `config/`: setiap env var baru wajib ditambahkan ke `env.ts`. Baca nilainya
   lewat `ConfigService<Env, true>` dengan `{ infer: true }`, jangan langsung
   dari `process.env`.
@@ -73,8 +82,13 @@ apps/api/
 - **Semua input dari luar divalidasi** (body, params, query) dengan Zod
   sebelum dipakai.
 - **Hak akses dicek di API**, bukan di frontend: setiap endpoint non-publik
-  wajib memakai guard auth + role.
+  wajib memakai guard auth + role. Sementara (sebelum WorkOS), `/admin/*`
+  memakai `AdminKeyGuard`: header `x-admin-key` harus sama dengan
+  `ADMIN_API_KEY`, dan hanya aktif jika `APP_ENV=local`.
 - **Kunci jawaban tidak pernah dikirim** di response sebelum attempt di-submit.
+  Pengecualian: endpoint `/admin/*` (untuk editor konten, dilindungi guard).
+- **Tes draft tidak pernah dikembalikan** endpoint peserta (`/tests`,
+  `/attempts`). Tes published read-only di admin; unpublish dulu untuk edit.
 - **Waktu & penilaian dihitung di server**; jangan percaya skor, waktu,
   atau status dari client.
 - Bahasa: kode, comment, pesan error, dan response dalam bahasa Inggris
@@ -93,7 +107,8 @@ apps/api/
 1. Buat `src/modules/<fitur>/` berisi module, controller, service
    (+ repository & dto bila perlu).
 2. Daftarkan module di `src/app.module.ts`.
-3. Tulis unit test untuk service; e2e untuk alur endpoint utama.
+3. Tulis unit test untuk service (repository di-mock); e2e untuk alur
+   endpoint utama.
 4. Jalankan `pnpm typecheck`, `pnpm test`, dan `pnpm build` dari root.
 
 ## Environment & menjalankan
@@ -102,6 +117,8 @@ apps/api/
   Jest butuh versi ini untuk memuat paket NestJS 12 yang berformat ESM.
 - Salin `.env.example` ke `.env` (local, DB `ielts_mock`) dan `.env.test`
   (test, DB `ielts_mock_test`). Keduanya tidak di-commit.
+- Tabel dibuat lewat migrasi dari root: `pnpm db:migrate` (+ `pnpm db:seed`
+  untuk tes demo) dan `DB_ENV=test pnpm db:migrate` untuk database test (e2e).
 - Environment (`APP_ENV`: local/development/staging/production), branch, dan
   semua env var dijelaskan di `docs/environments.md`. Nilai development &
   production disimpan di DigitalOcean, bukan di file.

@@ -1,4 +1,5 @@
-import type { GroupPayload, Skill } from "./test.js";
+import { type GroupPayload, isCompletionType } from "./authoring.js";
+import type { Skill } from "./test.js";
 
 // Pure grading functions (no framework, no database).
 // Grading that is stored is always run by apps/api, never trusted from a client.
@@ -39,8 +40,8 @@ export function isAnswerCorrect(
   if (given === null || normalizeAnswer(given) === "") return false;
 
   if (
-    (payload.type === "sentence_completion" ||
-      payload.type === "form_completion") &&
+    isCompletionType(payload.type) &&
+    "maxWords" in payload &&
     !withinWordLimit(given, payload.maxWords, payload.allowNumber)
   ) {
     return false;

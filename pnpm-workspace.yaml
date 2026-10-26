@@ -6,4 +6,5 @@ packages:
 # These ship prebuilt binaries, so their install scripts aren't needed.
 allowBuilds:
   "@parcel/watcher": false
+  esbuild: false
   unrs-resolver: false

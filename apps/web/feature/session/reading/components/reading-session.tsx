@@ -122,6 +122,7 @@ export function ReadingSession({
   if (!section) return null;
 
   const partNumbers = parts[sectionIndex]?.numbers ?? [];
+  const paragraphLabels = (section.paragraphs ?? []).flatMap((p) => (p.label ? [p.label] : []));
 
   return (
     <div className="flex h-screen flex-col">
@@ -169,6 +170,7 @@ export function ReadingSession({
             <QuestionGroupView
               key={group.id}
               group={group}
+              paragraphLabels={paragraphLabels}
               answers={answers}
               currentNumber={currentNumber}
               disabled={isSubmitting}

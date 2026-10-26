@@ -37,7 +37,8 @@ Internet ──HTTPS──▶ web (Next.js, container, port 3000)
 ```
 
 `apps/admin` nanti ditambahkan sebagai container ketiga dengan pola yang
-sama seperti web.
+sama seperti web, **setelah login WorkOS ada**. Sebelum itu admin hanya
+dipakai di laptop (endpoint `/admin/*` mati jika `APP_ENV` bukan `local`).
 
 ## Pilihan tempat menjalankan container
 
@@ -107,8 +108,13 @@ nanti tidak perlu mengubah kode. Cek harga terbaru di situs DigitalOcean.
 
 ### Tahap 4 — Setelahnya
 - GitHub Actions: typecheck & test harus lolos sebelum deploy (guardrail Fase 1).
-- Migrasi database (Fase 2) dijalankan sebelum versi baru API aktif
-  (App Platform: **pre-deploy job**; Droplet: langkah di script deploy).
+- **Migrasi database sudah ada** (`packages/db/drizzle/`), jadi deploy pertama
+  wajib menjalankan `pnpm db:migrate` (dan `pnpm db:seed` jika ingin tes
+  demo) ke database production sebelum API dipakai. Selanjutnya migrasi
+  dijalankan sebelum versi baru API aktif (App Platform: **pre-deploy job**;
+  Droplet: langkah di script deploy). Masih perlu diputuskan: menjalankan
+  migrasi dari container api (butuh drizzle-kit atau `migrate()` dari
+  drizzle-orm dengan CA database) atau dari GitHub Actions.
 - Tambahkan `apps/admin` sebagai container ketiga (Fase 3).
 - Pasang auth (Fase 3) sebelum app dibuka untuk umum.
 

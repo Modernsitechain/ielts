@@ -3,6 +3,7 @@
 export type {
   ChoiceOption,
   GroupPayload,
+  Paragraph,
   Question,
   QuestionGroup,
   QuestionType,
@@ -12,3 +13,6 @@ export type {
   TestModule,
   TestSummary,
 } from "@ielts-mock/question-schema";
+
+/** Answer choices shared by every TRUE/FALSE/NOT GIVEN and YES/NO/NOT GIVEN question. */
+export { FIXED_CHOICES } from "@ielts-mock/question-schema";

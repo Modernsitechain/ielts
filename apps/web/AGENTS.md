@@ -50,7 +50,7 @@ apps/web/
   (`packages/question-schema`), satu sumber kebenaran bersama `apps/api`.
   Tipe baru untuk soal/tes/attempt ditambahkan di package itu, bukan di sini.
 - Tipe khusus web (misalnya `health.ts`) boleh ditulis langsung di sini.
-- Hanya tipe, tanpa logika.
+- Hanya tipe (plus konstanta bersama seperti `FIXED_CHOICES`), tanpa logika.
 
 ### `core/services/` — pintu data
 - Nama file: `<domain>.service.ts` (contoh: `test.service.ts`). Fungsi selalu

@@ -87,6 +87,8 @@ export class AttemptsService {
 
   async start(testId: string, mode: AttemptMode): Promise<AttemptSession> {
     const test = await this.requireTest(testId);
+    // Drafts can't be started; existing attempts keep working after unpublishing.
+    if (test.status !== "published") throw new NotFoundException(`Test ${testId} not found`);
     const startedAt = new Date();
     const endsAt = new Date(startedAt.getTime() + test.durationMinutes * 60_000);
 

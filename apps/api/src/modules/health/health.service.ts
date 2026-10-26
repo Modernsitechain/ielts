@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { sql } from "drizzle-orm";
+import { sql } from "@ielts-mock/db";
 
 import { DATABASE, type Database } from "../../database/database.module";
 

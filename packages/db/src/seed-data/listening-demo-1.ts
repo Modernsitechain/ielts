@@ -1,66 +1,57 @@
-import type { TestRecord } from "../test-record";
+import type { SeedTest } from "./types.js";
 
 // Original demo content. Not official IELTS material.
 // Short version (Part 1 only, 4 questions); no audio yet.
 
-export const listeningDemo1: TestRecord = {
+export const listeningDemo1: SeedTest = {
   id: "listening-demo-1",
   title: "Listening — Demo 1",
   skill: "listening",
   module: null,
+  status: "published",
   isFree: false,
   durationMinutes: 30,
   sections: [
     {
       id: "l1-s1",
-      order: 1,
       kind: "listening_part",
       title: "Part 1: Booking a Community Room",
-      content: null,
+      paragraphs: null,
       audioUrl: null,
       groups: [
         {
           id: "l1-g1",
-          order: 1,
-          numberFrom: 1,
-          numberTo: 4,
           instructions:
             "Complete the form below. Write ONE WORD AND/OR A NUMBER for each answer.",
           payload: { type: "form_completion", maxWords: 1, allowNumber: true },
           questions: [
             {
               id: "l1-q1",
-              number: 1,
               prompt: "Name of group: Riverside ________ Club",
               options: null,
+              answers: ["photography"],
             },
             {
               id: "l1-q2",
-              number: 2,
               prompt: "Day of booking: ________",
               options: null,
+              answers: ["Thursday"],
             },
             {
               id: "l1-q3",
-              number: 3,
               prompt: "Expected number of people: ________",
               options: null,
+              answers: ["25", "twenty-five"],
             },
             {
               id: "l1-q4",
-              number: 4,
               prompt: "Room requested: the ________ Room",
               options: null,
+              answers: ["Garden"],
             },
           ],
         },
       ],
     },
   ],
-  answerKey: {
-    "l1-q1": ["photography"],
-    "l1-q2": ["Thursday"],
-    "l1-q3": ["25", "twenty-five"],
-    "l1-q4": ["Garden"],
-  },
 };

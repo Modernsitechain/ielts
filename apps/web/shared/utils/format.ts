@@ -14,7 +14,11 @@ export const MODE_LABEL: Record<AttemptMode, string> = {
 export const QUESTION_TYPE_LABEL: Record<QuestionType, string> = {
   multiple_choice_single: "Multiple choice",
   true_false_not_given: "True / False / Not Given",
+  yes_no_not_given: "Yes / No / Not Given",
+  matching_headings: "Matching headings",
+  matching_information: "Matching information",
   sentence_completion: "Sentence completion",
+  summary_completion: "Summary completion",
   form_completion: "Form completion",
 };
 

@@ -26,22 +26,23 @@ function toSummary(test: TestRecord): TestSummary {
 
 /** Public view of a test: everything except the answer key. */
 function toDetail(test: TestRecord): TestDetail {
-  const { answerKey: _answerKey, ...publicTest } = test;
+  const { answerKey: _answerKey, status: _status, ...publicTest } = test;
   return { ...publicTest, questionCount: countQuestions(test) };
 }
 
+/** Candidate-facing reads. Drafts are never returned. */
 @Injectable()
 export class TestsService {
   constructor(private readonly testsRepository: TestsRepository) {}
 
   async list(): Promise<TestSummary[]> {
-    const tests = await this.testsRepository.findAll();
+    const tests = await this.testsRepository.findPublished();
     return tests.map(toSummary);
   }
 
   async getById(id: string): Promise<TestDetail> {
     const test = await this.testsRepository.findById(id);
-    if (!test) throw new NotFoundException(`Test ${id} not found`);
+    if (!test || test.status !== "published") throw new NotFoundException(`Test ${id} not found`);
     return toDetail(test);
   }
 }

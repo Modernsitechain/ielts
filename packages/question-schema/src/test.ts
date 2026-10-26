@@ -1,11 +1,15 @@
 // Test models shared by apps/web, apps/admin and apps/api. Follows the data
-// model sketch in docs/project-brief.md; Zod schemas will be added in Phase 2.
+// model sketch in docs/project-brief.md.
 //
 // Answer keys are DELIBERATELY absent from these public types: tests sent to
 // candidates must not carry answers before submission (see AnswerKey).
 
+import type { GroupPayload, Paragraph } from "./authoring.js";
+
 export type Skill = "reading" | "listening";
 export type TestModule = "academic" | null;
+/** Only published tests are visible to candidates. */
+export type TestStatus = "draft" | "published";
 
 export type TestSummary = {
   id: string;
@@ -17,25 +21,13 @@ export type TestSummary = {
   questionCount: number;
 };
 
-export type ChoiceOption = {
-  key: string;
-  text: string;
-};
-
 export type Question = {
   id: string;
   /** Global number 1–40 within a test. */
   number: number;
   prompt: string;
-  options: ChoiceOption[] | null;
+  options: { key: string; text: string }[] | null;
 };
-
-/** Group-level data, discriminated by question type. */
-export type GroupPayload =
-  | { type: "multiple_choice_single" }
-  | { type: "true_false_not_given" }
-  | { type: "sentence_completion"; maxWords: number; allowNumber: boolean }
-  | { type: "form_completion"; maxWords: number; allowNumber: boolean };
 
 export type QuestionType = GroupPayload["type"];
 
@@ -54,8 +46,8 @@ export type Section = {
   order: number;
   kind: "passage" | "listening_part";
   title: string;
-  /** Passage text (Reading). Null for Listening. */
-  content: string | null;
+  /** Passage text (Reading), one entry per paragraph. Null for Listening. */
+  paragraphs: Paragraph[] | null;
   /** Audio URL (Listening). Null for Reading or when not uploaded yet. */
   audioUrl: string | null;
   groups: QuestionGroup[];

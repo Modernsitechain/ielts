@@ -14,6 +14,9 @@ environment variable. Rencana deploy: `docs/deployment.md`.
 
 Test otomatis (`pnpm test`) memakai database lokal `ielts_mock_test`.
 
+`apps/admin` **hanya jalan di `local`** sampai login WorkOS ada (Fase 3).
+Endpoint `/admin/*` di API menolak semua request jika `APP_ENV` bukan `local`.
+
 ## `APP_ENV` vs `NODE_ENV`
 
 Dua variabel berbeda, jangan ditukar:
@@ -38,7 +41,11 @@ Persiapan sekali per terminal: `nvm use` di root repo (Node 24).
 | Production lokal | `pnpm start`                | menguji hasil build yang sama dengan server; tanpa hot reload |
 
 - `pnpm start` otomatis menjalankan `pnpm build` dulu (Turbo), lalu
-  `node dist/main` (api, port 4000) dan `next start` (web, port 3000).
+  `node dist/main` (api, port 4000), `next start` (web, port 3000), dan
+  `next start` (admin, port 3001).
+- Tabel database dibuat dengan migrasi: `pnpm db:migrate` lalu `pnpm db:seed`
+  (tes demo). Untuk database test: `DB_ENV=test pnpm db:migrate`. Detail:
+  `packages/db/AGENTS.md`.
 - Matikan `pnpm dev` dulu sebelum `pnpm start`; keduanya memakai port yang sama.
 - Kode branch lain: `git switch <branch>` lalu perintah yang sama.
 - Setelah Dockerfile dibuat (Tahap 0 di `docs/deployment.md`), image yang
@@ -64,11 +71,16 @@ Persiapan sekali per terminal: `nvm use` di root repo (Node 24).
 | `PORT`             | `4000`                         | `4000`                         | `4000`                         | –       |
 | `DATABASE_URL`     | `postgresql://USER@localhost:5432/ielts_mock` | URL Managed PG (`ielts_mock_development`) | URL Managed PG (`ielts_mock`) | ya |
 | `DATABASE_CA_CERT` | (kosong)                       | CA cluster (PEM/base64)        | CA cluster (PEM/base64)        | ya      |
+| `ADMIN_API_KEY`    | hasil `openssl rand -hex 32`   | (tidak di-set)                 | (tidak di-set)                 | ya      |
 
 Catatan `DATABASE_URL` + `DATABASE_CA_CERT`: jika CA diisi, parameter SSL di
 URL (`sslmode=require`, dll.) otomatis dibuang dan koneksi memverifikasi
 sertifikat server dengan CA tersebut. Jadi connection string dari dashboard
 DigitalOcean boleh ditempel apa adanya.
+
+`ADMIN_API_KEY`: kunci sementara untuk endpoint `/admin/*` (header
+`x-admin-key`), sampai WorkOS menggantikannya. Kosong = endpoint admin mati.
+Minimal 32 karakter. Nilainya harus sama dengan di `apps/admin/.env.local`.
 
 ### `apps/web` (divalidasi di `apps/web/core/config/env.ts`)
 
@@ -81,16 +93,28 @@ DigitalOcean boleh ditempel apa adanya.
 `API_URL` wajib di semua environment selain `local`; web menolak start jika
 kosong, agar tidak diam-diam memanggil `localhost`.
 
+### `apps/admin` (divalidasi di `apps/admin/core/config/env.ts`, hanya local)
+
+| Variabel        | local                              | Rahasia |
+| --------------- | ---------------------------------- | ------- |
+| `APP_ENV`       | `local` (nilai lain ditolak)       | –       |
+| `API_URL`       | (default `http://localhost:4000`)  | –       |
+| `ADMIN_API_KEY` | sama dengan `apps/api/.env`        | ya      |
+
+Env admin dibaca saat request pertama, bukan saat build, jadi `pnpm build`
+tetap jalan tanpa kunci.
+
 ## File env
 
 | File                                   | Di-commit | Isi                                             |
 | -------------------------------------- | --------- | ----------------------------------------------- |
-| `apps/*/.env.example`                  | ya        | template **local**                              |
+| `apps/*/.env.example`                  | ya        | template **local** (admin hanya punya file ini) |
 | `apps/*/.env.development.example`      | ya        | referensi variabel environment **development**  |
 | `apps/*/.env.production.example`       | ya        | referensi variabel environment **production**   |
 | `apps/api/.env`                        | **tidak** | nilai local API (salinan `.env.example`)        |
 | `apps/api/.env.test`                   | **tidak** | nilai untuk test (DB `ielts_mock_test`)         |
 | `apps/web/.env.local`                  | **tidak** | opsional, override local web                    |
+| `apps/admin/.env.local`                | **tidak** | nilai local admin (wajib: `ADMIN_API_KEY`)      |
 
 Aturan:
 
@@ -103,8 +127,8 @@ Aturan:
 
 ## Menambah environment variable baru
 
-1. Tambahkan ke skema Zod: `apps/api/src/config/env.ts` atau
-   `apps/web/core/config/env.ts`.
+1. Tambahkan ke skema Zod: `apps/api/src/config/env.ts`,
+   `apps/web/core/config/env.ts`, atau `apps/admin/core/config/env.ts`.
 2. Tambahkan ke **semua** template: `.env.example`,
    `.env.development.example`, `.env.production.example` app tersebut.
 3. Tambahkan baris di tabel dokumen ini.

@@ -1,6 +1,6 @@
 import { Global, Inject, Module, type OnApplicationShutdown } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
+import { drizzle, type NodePgDatabase, schema } from "@ielts-mock/db";
 import { Pool } from "pg";
 
 import type { Env } from "../config/env";
@@ -10,7 +10,8 @@ import { buildPoolConfig } from "./pool-config";
 export const DATABASE = Symbol("DATABASE");
 const PG_POOL = Symbol("PG_POOL");
 
-export type Database = NodePgDatabase;
+/** Drizzle client with the schema from packages/db (enables `db.query.<table>`). */
+export type Database = NodePgDatabase<typeof schema>;
 
 /**
  * Provides one shared PostgreSQL connection pool and a Drizzle client on top
@@ -33,7 +34,7 @@ export type Database = NodePgDatabase;
     {
       provide: DATABASE,
       inject: [PG_POOL],
-      useFactory: (pool: Pool): Database => drizzle({ client: pool }),
+      useFactory: (pool: Pool): Database => drizzle({ client: pool, schema }),
     },
   ],
   exports: [DATABASE],
