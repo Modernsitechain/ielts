@@ -7,6 +7,12 @@ Fase: 1 (Fondasi project & AI tooling) — minggu ke-1
 sudah disusun di `docs/deployment.md`, belum dikerjakan. Mulai dari bagian "Keputusan yang
 perlu diambil" di file itu.
 
+**Sedang belajar PostgreSQL** (sebelum Fase 2), 6 sesi: 1) dasar & `psql`,
+2) relasi & JOIN, 3) constraint, 4) JSONB, 5) index & transaksi, 6) migrasi &
+Drizzle. Database latihan: `ielts_sandbox`. Posisi: **sesi 1** (tabel `tests`,
+INSERT/SELECT; latihan: filter berbayar, UPDATE durasi, INSERT tanpa title).
+Listening & audio ditunda; rekomendasi audio ada di catatan sesi 2026-10-24.
+
 ## Keputusan yang sudah diambil
 - Produk: SaaS mock test IELTS Reading & Listening (lihat project-brief.md)
 - Struktur: monorepo Turborepo + pnpm, 3 app: `apps/web` & `apps/admin`
@@ -100,6 +106,12 @@ perlu diambil" di file itu.
   `.env.example` / `.env.development.example` / `.env.production.example`,
   dukungan SSL + CA untuk Managed PostgreSQL, dan `docs/environments.md`.
   Environment terlihat di halaman `/status`.
+- [2026-10-24] Diskusi lanjutan: urutan sisa MVP (Listening dengan audio
+  placeholder → database Fase 2 → deploy → auth, admin, highlight, pembayaran).
+  Rekomendasi audio: dev pakai `say` macOS (bukan untuk komersial), produksi
+  rekaman/TTS berlisensi; MP3/M4A mono 64–96 kbps, satu file per part; simpan
+  di DigitalOcean Spaces + signed URL (belum diputuskan). Mulai belajar
+  PostgreSQL sesi 1.
 
 ## Yang masih bingung
 <!-- Tulis di sini, Claude akan menjelaskan ulang -->
