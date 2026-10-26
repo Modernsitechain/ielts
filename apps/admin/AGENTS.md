@@ -7,15 +7,15 @@ admin tidak pernah mengakses database.
 Konteks produk: `docs/project-brief.md`, `docs/ielts-domain.md`.
 Backend: `apps/api/AGENTS.md`. Skema database: `packages/db/AGENTS.md`.
 
-## Status sekarang (sementara)
+## Status sekarang
 
-- **Lokal dan development saja**, belum ada login. Pengaman sementara sampai
-  WorkOS + role admin/editor (Fase 3):
-  - API: kunci bersama `ADMIN_API_KEY` (header `x-admin-key`); endpoint admin
-    hanya aktif dengan `APP_ENV=local` atau `development`.
-  - Admin di server: `proxy.ts` meminta username & password (HTTP Basic Auth)
-    untuk semua halaman jika `APP_ENV` bukan `local`.
-  - **Jangan deploy admin ke production** sebelum WorkOS.
+- **Login WorkOS** (sama dengan web, akun yang sama). Hanya role `editor` dan
+  `admin` yang bisa memakai admin; user lain melihat halaman "No access"
+  (`AccessGate`). Pengecekan sebenarnya di API: `/admin/*` wajib token dengan
+  role `editor`/`admin`, publish/unpublish khusus `admin`.
+- Memberi role: user login sekali (di web atau admin), lalu
+  `pnpm db:set-role <email> admin|editor` (lokal) atau
+  `node dist/database/set-role.js <email> <role>` di console komponen api.
 - Admin memakai `basePath: "/admin"`: semua URL diawali `/admin`, juga di
   lokal (http://localhost:3001/admin; `/` dialihkan ke sana). Di server admin
   berbagi domain dengan web (`<url>/admin`). `next/link` dan `redirect()`
@@ -48,12 +48,13 @@ Sama dengan `apps/web` (lihat `apps/web/AGENTS.md`): `app/` hanya routing,
 
 ```
 apps/admin/
-├── proxy.ts                  # SEMENTARA: password gate (Basic Auth) di luar local
-├── app/                      # route: /, /tests/new, /tests/[testId] (re-export saja)
+├── proxy.ts                  # sesi WorkOS: semua halaman wajib login (kecuali /callback)
+├── app/                      # route: /, /tests/new, /tests/[testId], /callback (re-export saja)
 ├── core/
-│   ├── config/env.ts         # getEnv(): APP_ENV, API_URL, ADMIN_API_KEY (dibaca saat request pertama)
-│   ├── models/test.ts        # re-export tipe admin + aturan bersama dari question-schema
-│   └── services/             # api-client.ts (adminApi + x-admin-key), test.service.ts
+│   ├── config/env.ts         # getEnv(): APP_ENV, API_URL, variabel WorkOS (dibaca saat request pertama)
+│   ├── models/               # test.ts (tipe admin), user.ts (CurrentUser, ADMIN_APP_ROLES)
+│   └── services/             # api-client.ts (token WorkOS), test.service.ts, user.service.ts (GET /me)
+├── feature/auth/             # AccessGate, AccountMenu, signOutAction, route /callback
 ├── feature/tests/
 │   ├── pages/                # tests-page, new-test-page, test-editor-page
 │   ├── components/           # test-editor → passage-editor → group-editor → question-editor
@@ -64,8 +65,13 @@ apps/admin/
 
 ## Aturan wajib
 
-- `ADMIN_API_KEY` hanya dibaca di server (`core/config`, `core/services`).
-  Jangan pernah mengirimnya ke browser atau memakai prefix `NEXT_PUBLIC_`.
+- Login: `@workos-inc/authkit-nextjs` (public client, **tanpa
+  `WORKOS_API_KEY`**). Cookie sesi admin wajib bernama beda dari web
+  (`WORKOS_COOKIE_NAME=wos-admin-session`) karena keduanya satu domain saat
+  di-deploy. Path di `proxy.ts` ditulis tanpa `/admin`; matcher memuat `"/"`
+  tersendiri agar `/admin` tercakup.
+- `app/layout.tsx` boleh memakai `feature/auth/components` (`AccessGate`,
+  `AccountMenu`): pengecualian aturan "app hanya re-export".
 - Tipe admin (`AdminTest`, …) memuat kunci jawaban, jadi hanya untuk app ini.
 - Validasi di form hanya untuk kenyamanan. API memvalidasi ulang semuanya
   dengan Zod dan menolak publish yang belum lengkap.
@@ -81,11 +87,11 @@ apps/admin/
 
 ## Menjalankan
 
-1. Buat kunci: `openssl rand -hex 32`.
-2. Isi kunci yang sama di `apps/api/.env` dan `apps/admin/.env.local`
-   (salin dari `.env.example`) sebagai `ADMIN_API_KEY=...`.
-3. Pastikan tabel sudah ada: `pnpm db:migrate` (dan `pnpm db:seed` untuk demo).
-4. `pnpm dev` dari root → admin di http://localhost:3001/admin.
+1. Salin `.env.example` ke `.env.local`, isi `WORKOS_CLIENT_ID` (Staging) dan
+   `WORKOS_COOKIE_PASSWORD` (`openssl rand -base64 32`, beda dari web).
+2. Pastikan tabel sudah ada: `pnpm db:migrate` (dan `pnpm db:seed` untuk demo).
+3. `pnpm dev` dari root → admin di http://localhost:3001/admin → login.
+4. Jika muncul "No access": `pnpm db:set-role <email> admin`, lalu muat ulang.
 
 Deploy (development): `apps/admin/Dockerfile` + `.do/development.yaml`, lihat
 `docs/deployment.md`.

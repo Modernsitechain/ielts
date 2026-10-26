@@ -9,8 +9,10 @@ perlu diambil" di file itu.
 
 **WorkOS sedang dikerjakan** (rencana 6 tahap): Tahap 1 (akun WorkOS Staging,
 redirect URI, key di `.env` lokal) ✅, Tahap 2–3 (tabel `users` + auth di API)
-✅. Berikutnya: Tahap 4 login di web, Tahap 5 login di admin (hapus kunci &
-Basic Auth), Tahap 6 secret WorkOS di DigitalOcean + admin pertama.
+✅, Tahap 4 (login di web, attempt per user) ✅, Tahap 5 (login di admin,
+kunci admin & Basic Auth dihapus) ✅, Tahap 6 (spec development dengan
+variabel WorkOS sudah diterapkan ke DigitalOcean) — tinggal push kode, cek
+deploy, dan jadikan akun admin di database development.
 
 **Development sudah live**: https://ielts-development-9acd2.ondigitalocean.app
 (web di `/`, admin di `/admin` dengan password sementara, API di `/api`).
@@ -35,10 +37,8 @@ catatan sesi 2026-10-24.
 - Backend: NestJS, termasuk test bawaannya (Jest) untuk `apps/api`
 - AI tooling: Claude Code (terminal, agent utama) + Antigravity (editor & review)
 - Database: PostgreSQL + Drizzle; development memakai PostgreSQL lokal
-- Auth: WorkOS (AuthKit). Sampai terpasang, endpoint admin dilindungi kunci
-  sementara `ADMIN_API_KEY` dan hanya aktif di `APP_ENV=local`/`development`;
-  admin hanya di-deploy ke development, di balik password sementara (Basic
-  Auth); production tanpa admin sampai WorkOS
+- Auth: WorkOS (AuthKit) di web, admin, dan API. Kunci sementara
+  `ADMIN_API_KEY` dan password Basic Auth admin sudah dihapus (2026-10-26)
 - Commit message: `<type>: <ringkasan>` dalam bahasa Inggris; type hanya
   `feat` atau `fix`. Perintah `/axl commit` & `/axl push` di
   `.claude/skills/axl/SKILL.md`
@@ -180,6 +180,24 @@ catatan sesi 2026-10-24.
   `AuthGuard`, `RolesGuard` + `@Roles`, `AdminAccessGuard` sementara (kunci
   admin atau login), publish/unpublish khusus admin. Unit test + e2e dengan
   WorkOS palsu.
+- [2026-10-26] WorkOS Tahap 4: login di web dengan
+  `@workos-inc/authkit-nextjs` (public client, tanpa API key). `proxy.ts`:
+  halaman privat (riwayat, sesi ujian) wajib login. Route `/sign-in`,
+  `/callback`, tombol Sign in/Sign out di header, "Sign in to start" di halaman
+  tes. Token dikirim ke API lewat `api-client.ts`. API: `/attempts` wajib
+  login dan setiap user hanya melihat attempt miliknya; attempt demo bawaan
+  dihapus (riwayat mulai kosong).
+- [2026-10-26] WorkOS Tahap 5: admin login dengan WorkOS (cookie
+  `wos-admin-session`, tanpa API key), `AccessGate` ("No access" untuk
+  student), nama & role di header, sign out. Dihapus: `AdminKeyGuard`,
+  `AdminAccessGuard`, `ADMIN_API_KEY`, Basic Auth di `proxy.ts`. e2e admin
+  memakai WorkOS palsu. Catatan `basePath`: matcher proxy butuh `"/"` agar
+  `/admin` tercakup.
+- [2026-10-26] WorkOS Tahap 6: `.do/development.yaml` memakai variabel WorkOS
+  (Client ID biasa, API key & cookie password sebagai `EV[...]`, redirect URI
+  `RUN_AND_BUILD_TIME`), `ADMIN_API_KEY` & Basic Auth dihapus dari app.
+  `.do/production.yaml` diberi placeholder WorkOS Production.
+  `docs/deployment.md` diperbarui (langkah WorkOS, redirect di dashboard).
 
 ## Yang masih bingung
 <!-- Tulis di sini, Claude akan menjelaskan ulang -->

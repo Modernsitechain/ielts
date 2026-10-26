@@ -6,6 +6,7 @@
 # Secrets: values marked EV[...] are encrypted by App Platform and can only be
 # decrypted by this app, so they are safe to keep here. The database URL and CA
 # certificate are injected from the attached database (${db.…}).
+# WORKOS_CLIENT_ID isn't secret (it is visible in the sign-in URL).
 name: ielts-development
 region: sgp
 
@@ -35,8 +36,12 @@ services:
       - key: DATABASE_CA_CERT
         value: ${db.CA_CERT}
         scope: RUN_TIME
-      - key: ADMIN_API_KEY
-        value: EV[1:KBWXqgMvFoFNP31MRGCb0xtsqUolQKhp:4+FIHBFBkgi88DI8ZvE9EgBRPntgXgXXS7klF/UvUc9E7/eX3phPzL97bIWxGxJ66CLx0CpGgQwhHZw/fyiMOyV2r0gb+sFech2lGCV+0Iw=]
+      # WorkOS Staging environment (same as local).
+      - key: WORKOS_CLIENT_ID
+        value: client_01M5WD4X81TY1HC9BWFT0A7MDN
+        scope: RUN_TIME
+      - key: WORKOS_API_KEY
+        value: EV[1:tXMHYRbR59+btjW2FGySishMZkSBvquu:/P0IABszzs7+RiDTgJ2E2AZ1TrSMvSQy/O9v6c8PFHIoJzHaUW7Ik8et7ZQta42rzrcwqJ0g3N21e1bJhGkosHMhbAKNkM0YHlvN75+bRg6qjRZtB0nkIjaqhSv7SYD4O+w9]
         type: SECRET
         scope: RUN_TIME
 
@@ -60,6 +65,17 @@ services:
       - key: API_URL
         value: http://api:4000
         scope: RUN_TIME
+      - key: WORKOS_CLIENT_ID
+        value: client_01M5WD4X81TY1HC9BWFT0A7MDN
+        scope: RUN_TIME
+      - key: WORKOS_COOKIE_PASSWORD
+        value: EV[1:AwNBpbtGaTD0vktQy2TOvdAS0VQIkn/2:YoEIFL6wurcilSwlJxddJ2ENSy1C2nse+0DZ9SbQ+ojGu4GkzkxK+5zVcNDgU6DH7o1QGg+OXOhIBANt]
+        type: SECRET
+        scope: RUN_TIME
+      # Inlined by Next.js at build time, so also a build arg (see Dockerfile).
+      - key: NEXT_PUBLIC_WORKOS_REDIRECT_URI
+        value: https://ielts-development-9acd2.ondigitalocean.app/callback
+        scope: RUN_AND_BUILD_TIME
 
   - name: admin
     github:
@@ -71,8 +87,8 @@ services:
     http_port: 3001
     instance_size_slug: apps-s-1vcpu-0.5gb
     instance_count: 1
-    # No HTTP health check: every admin page is behind the password gate (401
-    # without it), so App Platform's default TCP check is used.
+    # No HTTP health check: every admin page redirects to sign-in, so App
+    # Platform's default TCP check is used.
     envs:
       - key: APP_ENV
         value: development
@@ -80,18 +96,20 @@ services:
       - key: API_URL
         value: http://api:4000
         scope: RUN_TIME
-      - key: ADMIN_API_KEY
-        value: EV[1:6jKmXxpUi5rjYVJDQ3CTGcHQoH+n1hOw:aMkxxR7Pqm42K7bbxso+Rkzptxa7kd0spdO6c8A1MMfCTiiEkEOsKBplROvRXhg82NtbeUj4hf0ENyUKpCxO4wRDCH+AKJBs/HrQbzIrv3M=]
+      - key: WORKOS_CLIENT_ID
+        value: client_01M5WD4X81TY1HC9BWFT0A7MDN
+        scope: RUN_TIME
+      # Different from web's: both apps share this domain.
+      - key: WORKOS_COOKIE_PASSWORD
+        value: EV[1:wkO33jEfk/XmQeIoxGT4EBaM/LNln/3v:RSG1C03MDmJGJjC3cbHTUZA7u7qBU6ARPVm7i2hhTGmR77eJdVfqVval7niU9JS++bPqb2TTyW/Szojy]
         type: SECRET
         scope: RUN_TIME
-      # TEMPORARY password gate until WorkOS login (apps/admin/proxy.ts).
-      - key: ADMIN_BASIC_AUTH_USER
-        value: admin
+      - key: WORKOS_COOKIE_NAME
+        value: wos-admin-session
         scope: RUN_TIME
-      - key: ADMIN_BASIC_AUTH_PASSWORD
-        value: EV[1:YdQHMuHDHVjOl6pkcAHxqq+NAWIh3/8C:k/Fv1HyJEbAKGXHW7x1r7eYdHHMSrqq4MWlezIV4sTyI/19a89M1ctVWg4C/JE1F]
-        type: SECRET
-        scope: RUN_TIME
+      - key: NEXT_PUBLIC_WORKOS_REDIRECT_URI
+        value: https://ielts-development-9acd2.ondigitalocean.app/admin/callback
+        scope: RUN_AND_BUILD_TIME
 
 jobs:
   # Runs before each new version goes live; a failed migration stops the deploy.

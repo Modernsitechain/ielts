@@ -77,6 +77,8 @@ function grade(attempt: AttemptRecord, test: TestRecord, submittedAt: string): A
 /**
  * Attempt lifecycle: start → autosave → submit → result.
  * Time limits and grading are decided here, never trusted from the client.
+ * Every method takes the signed-in user's id: someone else's attempt is
+ * reported as not found.
  */
 @Injectable()
 export class AttemptsService {
@@ -85,7 +87,7 @@ export class AttemptsService {
     private readonly testsRepository: TestsRepository,
   ) {}
 
-  async start(testId: string, mode: AttemptMode): Promise<AttemptSession> {
+  async start(userId: string, testId: string, mode: AttemptMode): Promise<AttemptSession> {
     const test = await this.requireTest(testId);
     // Drafts can't be started; existing attempts keep working after unpublishing.
     if (test.status !== "published") throw new NotFoundException(`Test ${testId} not found`);
@@ -94,6 +96,7 @@ export class AttemptsService {
 
     const attempt = await this.attemptsRepository.create({
       id: randomUUID(),
+      userId,
       testId: test.id,
       mode,
       startedAt: startedAt.toISOString(),
@@ -104,13 +107,13 @@ export class AttemptsService {
     return toSession(attempt);
   }
 
-  async getSession(id: string): Promise<AttemptSession> {
-    return toSession(await this.requireAttempt(id));
+  async getSession(userId: string, id: string): Promise<AttemptSession> {
+    return toSession(await this.requireAttempt(userId, id));
   }
 
   /** Autosave. Rejected once the attempt is submitted or its time is up. */
-  async saveAnswers(id: string, answers: Record<string, string>): Promise<void> {
-    const attempt = await this.requireAttempt(id);
+  async saveAnswers(userId: string, id: string, answers: Record<string, string>): Promise<void> {
+    const attempt = await this.requireAttempt(userId, id);
     if (attempt.submittedAt) throw new ConflictException("Attempt already submitted");
     if (this.isPastDeadline(attempt)) throw new ConflictException("Time is up");
 
@@ -122,8 +125,8 @@ export class AttemptsService {
    * Submits and grades the attempt. If time is up, the submitted answers are
    * ignored and the last autosave before the deadline is graded instead.
    */
-  async submit(id: string, answers: Record<string, string>): Promise<AttemptResult> {
-    const attempt = await this.requireAttempt(id);
+  async submit(userId: string, id: string, answers: Record<string, string>): Promise<AttemptResult> {
+    const attempt = await this.requireAttempt(userId, id);
     if (attempt.submittedAt) throw new ConflictException("Attempt already submitted");
 
     const test = await this.requireTest(attempt.testId);
@@ -136,18 +139,18 @@ export class AttemptsService {
     return grade({ ...attempt, answers: finalAnswers }, test, submittedAt);
   }
 
-  async getResult(id: string): Promise<AttemptResult> {
-    const attempt = await this.requireAttempt(id);
+  async getResult(userId: string, id: string): Promise<AttemptResult> {
+    const attempt = await this.requireAttempt(userId, id);
     if (!attempt.submittedAt) throw new NotFoundException(`Attempt ${id} has no result yet`);
     return grade(attempt, await this.requireTest(attempt.testId), attempt.submittedAt);
   }
 
   /**
-   * Submitted attempts, newest first. Attempts whose test no longer exists
+   * The user's submitted attempts, newest first. Attempts whose test no longer exists
    * (e.g. deleted in the admin) are left out instead of failing the list.
    */
-  async listSubmitted(): Promise<AttemptSummary[]> {
-    const attempts = await this.attemptsRepository.findSubmitted();
+  async listSubmitted(userId: string): Promise<AttemptSummary[]> {
+    const attempts = await this.attemptsRepository.findSubmittedByUser(userId);
     const summaries = await Promise.all(
       attempts.map(async (attempt) => {
         const test = await this.testsRepository.findById(attempt.testId);
@@ -165,9 +168,9 @@ export class AttemptsService {
     return Date.now() > Date.parse(attempt.endsAt) + DEADLINE_GRACE_MS;
   }
 
-  private async requireAttempt(id: string): Promise<AttemptRecord> {
+  private async requireAttempt(userId: string, id: string): Promise<AttemptRecord> {
     const attempt = await this.attemptsRepository.findById(id);
-    if (!attempt) throw new NotFoundException(`Attempt ${id} not found`);
+    if (!attempt || attempt.userId !== userId) throw new NotFoundException(`Attempt ${id} not found`);
     return attempt;
   }
 

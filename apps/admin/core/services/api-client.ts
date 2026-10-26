@@ -1,9 +1,12 @@
 import "server-only";
 
+import { withAuth } from "@workos-inc/authkit-nextjs";
+
 import { getEnv } from "@/core/config/env";
 
 // apps/api is only called from the server (Server Components and Server
-// Actions), so the admin key never reaches the browser.
+// Actions), with the signed-in user's WorkOS access token as a bearer token.
+// The API decides what their role (editor/admin) may do.
 
 const REQUEST_TIMEOUT_MS = 5_000;
 
@@ -30,28 +33,27 @@ function readErrors(body: ErrorBody): string[] {
 }
 
 function describeStatus(status: number): string {
-  if (status === 401 || status === 403) {
-    return "The API refused the admin key. Check ADMIN_API_KEY in apps/api/.env and apps/admin/.env.local.";
-  }
+  if (status === 401) return "Your session has expired. Reload the page to sign in again.";
+  if (status === 403) return "Your account isn't allowed to do this.";
   return `The API responded with ${status}.`;
 }
 
 /**
- * Calls an /admin endpoint of apps/api with the admin key. API errors come
- * back as `ok: false` with readable messages; network errors throw.
+ * Calls apps/api as the signed-in user. API errors come back as `ok: false`
+ * with readable messages; network errors throw.
  */
-export async function adminApi<T>(
+export async function apiRequest<T>(
   path: string,
   init?: { method?: string; body?: unknown },
 ): Promise<ApiResult<T>> {
-  const env = getEnv();
   const hasBody = init?.body !== undefined;
-  const response = await fetch(`${env.API_URL}/admin${path}`, {
+  const { accessToken } = await withAuth();
+  const headers: Record<string, string> = {};
+  if (hasBody) headers["content-type"] = "application/json";
+  if (accessToken) headers.authorization = `Bearer ${accessToken}`;
+  const response = await fetch(`${getEnv().API_URL}${path}`, {
     method: init?.method ?? "GET",
-    headers: {
-      "x-admin-key": env.ADMIN_API_KEY,
-      ...(hasBody ? { "content-type": "application/json" } : {}),
-    },
+    headers,
     body: hasBody ? JSON.stringify(init.body) : undefined,
     cache: "no-store",
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
@@ -68,6 +70,14 @@ export async function adminApi<T>(
       ? describeStatus(response.status)
       : [body.message].flat().join(" ");
   return { ok: false, status: response.status, message, errors: readErrors(body) };
+}
+
+/** Calls an /admin endpoint of apps/api (see apiRequest). */
+export function adminApi<T>(
+  path: string,
+  init?: { method?: string; body?: unknown },
+): Promise<ApiResult<T>> {
+  return apiRequest<T>(`/admin${path}`, init);
 }
 
 /** For pages: returns the data, null for 404, and throws on any other error. */

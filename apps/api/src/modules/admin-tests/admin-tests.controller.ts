@@ -19,16 +19,15 @@ import {
 } from "@ielts-mock/question-schema";
 
 import { Roles } from "../../common/decorators/roles.decorator";
-import { AdminAccessGuard } from "../../common/guards/admin-access.guard";
+import { AuthGuard } from "../../common/guards/auth.guard";
 import { RolesGuard } from "../../common/guards/roles.guard";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { AdminTestsService } from "./admin-tests.service";
 
 // Responses include answers: for apps/admin only. Editors and admins may
-// edit; only admins publish. AdminAccessGuard also accepts the temporary admin
-// key until apps/admin signs in with WorkOS.
+// edit; only admins publish.
 @Controller("admin/tests")
-@UseGuards(AdminAccessGuard, RolesGuard)
+@UseGuards(AuthGuard, RolesGuard)
 @Roles(["editor", "admin"])
 export class AdminTestsController {
   constructor(private readonly adminTestsService: AdminTestsService) {}

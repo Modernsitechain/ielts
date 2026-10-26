@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import { eq, setUserRole, users } from "@ielts-mock/db";
+import { eq, seedDemoTests, setUserRole, users } from "@ielts-mock/db";
 import type { AdminTest, CurrentUser } from "@ielts-mock/question-schema";
 import request from "supertest";
 import type { App } from "supertest/types";
@@ -30,6 +30,7 @@ describe("Auth (e2e)", () => {
     app = moduleRef.createNestApplication();
     await app.init();
     db = app.get(DATABASE);
+    await seedDemoTests(db); // attempts need a published test
     token = await workos.signIn({ id: workosUserId, email, name: "Eve Tester" });
   });
 
@@ -61,6 +62,29 @@ describe("Auth (e2e)", () => {
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
     expect((again.body as CurrentUser).id).toBe((response.body as CurrentUser).id);
+  });
+
+  it("keeps attempts private to their owner", async () => {
+    const server = app.getHttpServer();
+    await request(server).get("/attempts").expect(401);
+
+    const started = await request(server)
+      .post("/attempts")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ testId: "reading-demo-1", mode: "exam" })
+      .expect(201);
+    const attemptId = (started.body as { id: string }).id;
+
+    const otherId = `user_e2e_${randomUUID()}`;
+    const other = await workos.signIn({ id: otherId, email: `${otherId}@example.com`, name: null });
+    try {
+      await request(server)
+        .get(`/attempts/${attemptId}`)
+        .set("Authorization", `Bearer ${other}`)
+        .expect(404);
+    } finally {
+      await db.delete(users).where(eq(users.workosUserId, otherId));
+    }
   });
 
   it("keeps students out of the admin endpoints", async () => {

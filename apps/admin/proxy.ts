@@ -1,38 +1,22 @@
-import { createHash, timingSafeEqual } from "node:crypto";
-
-import { type NextRequest, NextResponse } from "next/server";
+import { authkitProxy } from "@workos-inc/authkit-nextjs";
+import type { NextFetchEvent, NextRequest } from "next/server";
 
 import { getEnv } from "@/core/config/env";
 
-// TEMPORARY password gate (HTTP Basic Auth) for the deployed admin, until
-// WorkOS login with admin/editor roles replaces it (Phase 3). Off locally.
+// Every admin page needs a WorkOS sign-in, except the callback WorkOS returns
+// to. Roles (editor/admin) are checked by the API and shown by AccessGate.
+// Paths here are without the /admin base path (Next.js strips it).
+const authkit = authkitProxy({
+  middlewareAuth: { enabled: true, unauthenticatedPaths: ["/callback"] },
+});
 
-function sha256(value: string): Buffer {
-  return createHash("sha256").update(value).digest();
+export function proxy(request: NextRequest, event: NextFetchEvent) {
+  getEnv(); // clear error if a variable is missing
+  return authkit(request, event);
 }
 
-function matches(given: string, expected: string): boolean {
-  return timingSafeEqual(sha256(given), sha256(expected));
-}
-
-export function proxy(request: NextRequest) {
-  const env = getEnv();
-  if (env.APP_ENV === "local") return NextResponse.next();
-
-  const [scheme, encoded] = request.headers.get("authorization")?.split(" ") ?? [];
-  if (scheme === "Basic" && encoded) {
-    const decoded = Buffer.from(encoded, "base64").toString("utf8");
-    const separator = decoded.indexOf(":");
-    const user = decoded.slice(0, separator);
-    const password = decoded.slice(separator + 1);
-    // Both are checked so the response time doesn't reveal which one was wrong.
-    const userOk = matches(user, env.ADMIN_BASIC_AUTH_USER ?? "");
-    const passwordOk = matches(password, env.ADMIN_BASIC_AUTH_PASSWORD ?? "");
-    if (separator > 0 && userOk && passwordOk) return NextResponse.next();
-  }
-
-  return new NextResponse("Authentication required", {
-    status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="IELTS Mock Admin", charset="UTF-8"' },
-  });
-}
+export const config = {
+  // Everything except static files. "/" is listed on its own: with a base
+  // path, the pattern below doesn't match the admin home (/admin).
+  matcher: ["/", "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|webp|ico)$).*)"],
+};

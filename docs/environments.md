@@ -14,10 +14,9 @@ environment variable. Rencana deploy: `docs/deployment.md`.
 
 Test otomatis (`pnpm test`) memakai database lokal `ielts_mock_test`.
 
-`apps/admin` jalan di `local` dan `development` (di balik password sementara),
-**tidak di `production`** sampai login WorkOS ada (Fase 3). Endpoint `/admin/*`
-di API menolak semua request jika `APP_ENV` bukan `local` atau `development`.
-Admin dibuka di path `/admin` (lokal: http://localhost:3001/admin).
+`apps/admin` memakai login WorkOS; hanya role `editor`/`admin` (dicek API).
+Saat ini di-deploy ke `development`; production menyusul (boleh, karena sudah
+ada login). Admin dibuka di path `/admin` (lokal: http://localhost:3001/admin).
 
 ## `APP_ENV` vs `NODE_ENV`
 
@@ -81,8 +80,7 @@ Berlaku sejak 2026-10-26 (branch `development` dibuat atas aba-aba developer):
 | `PORT`             | `4000`                         | `4000`                         | `4000`                         | –       |
 | `DATABASE_URL`     | `postgresql://USER@localhost:5432/ielts_mock` | `${db.DATABASE_URL}` (`ielts_mock_development`) | `${db.DATABASE_URL}` (`ielts_mock`) | ya |
 | `DATABASE_CA_CERT` | (kosong)                       | `${db.CA_CERT}`                | `${db.CA_CERT}`                | ya      |
-| `ADMIN_API_KEY`    | hasil `openssl rand -hex 32`   | SECRET di app spec (acak)      | (tidak di-set)                 | ya      |
-| `WORKOS_CLIENT_ID` | WorkOS **Staging** (`client_…`) | WorkOS **Staging** (SECRET)   | WorkOS **Production** (SECRET) | ya      |
+| `WORKOS_CLIENT_ID` | WorkOS **Staging** (`client_…`) | WorkOS **Staging**   | WorkOS **Production** | –       |
 | `WORKOS_API_KEY`   | WorkOS **Staging** (`sk_test_…`) | WorkOS **Staging** (SECRET)  | WorkOS **Production** (SECRET) | ya      |
 
 Di App Platform, `${db.…}` diisi otomatis dari database yang di-attach di app
@@ -95,15 +93,11 @@ URL (`sslmode=require`, dll.) otomatis dibuang dan koneksi memverifikasi
 sertifikat server dengan CA tersebut. Jadi connection string dari dashboard
 DigitalOcean boleh ditempel apa adanya.
 
-`ADMIN_API_KEY`: kunci sementara untuk endpoint `/admin/*` (header
-`x-admin-key`), sampai WorkOS menggantikannya. Kosong = endpoint admin mati.
-Minimal 32 karakter. Nilainya harus sama dengan di `apps/admin/.env.local`.
-
 `WORKOS_CLIENT_ID` & `WORKOS_API_KEY` (dashboard WorkOS → API Keys): Client ID
 dipakai untuk memverifikasi access token (kunci publik/JWKS), API Key untuk
 mengambil profil user saat pertama kali login. Nilainya sama dengan yang di
 web & admin. Jika kosong, endpoint yang butuh login menjawab 503 (job migrasi
-tidak membutuhkannya). Belum diisi di DigitalOcean (Tahap 6 WorkOS).
+tidak membutuhkannya). Client ID bukan rahasia (terlihat di URL login).
 
 ### `apps/web` (divalidasi di `apps/web/core/config/env.ts`)
 
@@ -116,21 +110,33 @@ tidak membutuhkannya). Belum diisi di DigitalOcean (Tahap 6 WorkOS).
 `API_URL` wajib di semua environment selain `local`; web menolak start jika
 kosong, agar tidak diam-diam memanggil `localhost`.
 
-### `apps/admin` (divalidasi di `apps/admin/core/config/env.ts`; tidak ada di production)
+Login WorkOS (dicek di `apps/web/core/config/auth.ts` saat request pertama):
 
-| Variabel                    | local                              | development                     | Rahasia |
-| --------------------------- | ---------------------------------- | ------------------------------- | ------- |
-| `APP_ENV`                   | `local`                            | `development` (`production` ditolak) | –  |
-| `API_URL`                   | (default `http://localhost:4000`)  | `http://api:4000` (privat)      | –       |
-| `ADMIN_API_KEY`             | sama dengan `apps/api/.env`        | sama dengan komponen api (SECRET) | ya    |
-| `ADMIN_BASIC_AUTH_USER`     | (tidak perlu)                      | `admin`                         | –       |
-| `ADMIN_BASIC_AUTH_PASSWORD` | (tidak perlu)                      | acak, min. 16 karakter (SECRET) | ya      |
+| Variabel                          | local                              | development                                  | production                       | Rahasia |
+| --------------------------------- | ---------------------------------- | -------------------------------------------- | -------------------------------- | ------- |
+| `WORKOS_CLIENT_ID`                | WorkOS **Staging**                 | WorkOS **Staging**                  | WorkOS **Production**   | –       |
+| `WORKOS_COOKIE_PASSWORD`          | acak, min. 32 karakter             | acak (SECRET), beda dari admin               | acak (SECRET)                    | ya      |
+| `NEXT_PUBLIC_WORKOS_REDIRECT_URI` | `http://localhost:3000/callback`   | `https://<url-development>/callback`         | `https://<domain>/callback`      | –       |
 
-Di luar `local`, `apps/admin/proxy.ts` meminta username & password (HTTP Basic
-Auth) untuk semua halaman admin. Sementara, sampai login WorkOS.
+Web **tidak** memakai `WORKOS_API_KEY` (login sebagai public client/PKCE).
+`NEXT_PUBLIC_WORKOS_REDIRECT_URI` di-inline saat build: di App Platform
+scope-nya `RUN_AND_BUILD_TIME`. Setiap redirect URI juga harus terdaftar di
+dashboard WorkOS (Redirects).
 
-Env admin dibaca saat request pertama, bukan saat build, jadi `pnpm build`
-tetap jalan tanpa kunci.
+### `apps/admin` (divalidasi di `apps/admin/core/config/env.ts`, saat request pertama)
+
+| Variabel                          | local                                  | development                                   | Rahasia |
+| --------------------------------- | -------------------------------------- | --------------------------------------------- | ------- |
+| `APP_ENV`                         | `local`                                | `development`                                 | –       |
+| `API_URL`                         | (default `http://localhost:4000`)      | `http://api:4000` (privat)                    | –       |
+| `WORKOS_CLIENT_ID`                | WorkOS **Staging**                     | WorkOS **Staging**                   | –       |
+| `WORKOS_COOKIE_PASSWORD`          | acak, min. 32 karakter, beda dari web  | acak (SECRET), beda dari web                  | ya      |
+| `WORKOS_COOKIE_NAME`              | `wos-admin-session`                    | `wos-admin-session`                           | –       |
+| `NEXT_PUBLIC_WORKOS_REDIRECT_URI` | `http://localhost:3001/admin/callback` | `https://<url-development>/admin/callback`    | –       |
+
+Admin **tidak** memakai `WORKOS_API_KEY`. `WORKOS_COOKIE_NAME` wajib beda dari
+cookie web (`wos-session`): di server keduanya satu domain. Redirect URI
+di-inline saat build (`RUN_AND_BUILD_TIME` di App Platform).
 
 ## File env
 
@@ -141,8 +147,8 @@ tetap jalan tanpa kunci.
 | `apps/*/.env.production.example`       | ya        | referensi variabel environment **production**   |
 | `apps/api/.env`                        | **tidak** | nilai local API (salinan `.env.example`)        |
 | `apps/api/.env.test`                   | **tidak** | nilai untuk test (DB `ielts_mock_test`)         |
-| `apps/web/.env.local`                  | **tidak** | opsional, override local web                    |
-| `apps/admin/.env.local`                | **tidak** | nilai local admin (wajib: `ADMIN_API_KEY`)      |
+| `apps/web/.env.local`                  | **tidak** | nilai local web (wajib: variabel WorkOS)        |
+| `apps/admin/.env.local`                | **tidak** | nilai local admin (wajib: variabel WorkOS)      |
 
 Aturan:
 

@@ -1,7 +1,9 @@
 # DigitalOcean App Platform spec: environment "production" (api + web).
 # Deploys on every push to the `main` branch. Setup: docs/deployment.md.
 #   Update: doctl apps update <app-id> --spec .do/production.yaml
-# No admin and no public API in production until WorkOS login exists.
+# No public API. Admin isn't deployed here yet (possible now that it has WorkOS
+# login). Placeholders __…__ are filled when the app is created; see
+# docs/deployment.md (Tahap 5). WorkOS: the Production environment's keys.
 name: ielts-production
 region: sgp
 
@@ -34,6 +36,13 @@ services:
       - key: DATABASE_CA_CERT
         value: ${db.CA_CERT}
         scope: RUN_TIME
+      - key: WORKOS_CLIENT_ID
+        value: __WORKOS_CLIENT_ID__
+        scope: RUN_TIME
+      - key: WORKOS_API_KEY
+        value: __WORKOS_API_KEY__
+        type: SECRET
+        scope: RUN_TIME
 
   - name: web
     github:
@@ -54,6 +63,17 @@ services:
       - key: API_URL
         value: http://api:4000
         scope: RUN_TIME
+      - key: WORKOS_CLIENT_ID
+        value: __WORKOS_CLIENT_ID__
+        scope: RUN_TIME
+      - key: WORKOS_COOKIE_PASSWORD
+        value: __WEB_COOKIE_PASSWORD__
+        type: SECRET
+        scope: RUN_TIME
+      # Inlined by Next.js at build time, so also a build arg (see Dockerfile).
+      - key: NEXT_PUBLIC_WORKOS_REDIRECT_URI
+        value: __APP_URL__/callback
+        scope: RUN_AND_BUILD_TIME
 
 jobs:
   # Runs before each new version goes live; a failed migration stops the deploy.

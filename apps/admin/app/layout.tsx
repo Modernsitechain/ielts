@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import type { ReactNode } from "react";
 
+import { AccessGate } from "@/feature/auth/components/access-gate";
+import { AccountMenu } from "@/feature/auth/components/account-menu";
 import { AdminLayout } from "@/shared/layouts/admin-layout";
 
 import "./globals.css";
@@ -18,7 +20,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={geistSans.variable}>
       <body className="font-sans text-slate-900 antialiased">
-        <AdminLayout>{children}</AdminLayout>
+        <AdminLayout account={<AccountMenu />}>
+          <AccessGate>{children}</AccessGate>
+        </AdminLayout>
       </body>
     </html>
   );

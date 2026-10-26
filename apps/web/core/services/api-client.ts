@@ -1,9 +1,12 @@
 import "server-only";
 
+import { withAuth } from "@workos-inc/authkit-nextjs";
+
 import { env } from "@/core/config/env";
 
 // apps/api is only called from the server (Server Components and Server
-// Actions), so the browser never talks to the API directly.
+// Actions), so the browser never talks to the API directly. When someone is
+// signed in, their WorkOS access token goes along as a bearer token.
 const API_URL = env.API_URL;
 
 const REQUEST_TIMEOUT_MS = 3_000;
@@ -23,9 +26,13 @@ export async function apiFetch(
   init?: { method?: string; body?: unknown },
 ): Promise<Response> {
   const hasBody = init?.body !== undefined;
+  const { accessToken } = await withAuth();
+  const headers: Record<string, string> = {};
+  if (hasBody) headers["content-type"] = "application/json";
+  if (accessToken) headers.authorization = `Bearer ${accessToken}`;
   return fetch(`${API_URL}${path}`, {
     method: init?.method ?? "GET",
-    headers: hasBody ? { "content-type": "application/json" } : undefined,
+    headers,
     body: hasBody ? JSON.stringify(init.body) : undefined,
     cache: "no-store",
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),

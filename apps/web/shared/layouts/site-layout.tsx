@@ -2,6 +2,7 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { AccountMenu } from "@/feature/auth/components/account-menu";
 import { Logo } from "@/shared/components/logo";
 
 /**
@@ -22,13 +23,16 @@ export function SiteLayout({ children }: { children: ReactNode }) {
               History
             </Link>
           </div>
-          <Link
-            href="/tests"
-            className="ml-auto hidden items-center gap-1.5 rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700 sm:inline-flex"
-          >
-            Start practising
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
+          <div className="ml-auto flex items-center gap-4">
+            <AccountMenu />
+            <Link
+              href="/tests"
+              className="hidden items-center gap-1.5 rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700 sm:inline-flex"
+            >
+              Start practising
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+          </div>
         </nav>
       </header>
 

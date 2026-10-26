@@ -7,12 +7,17 @@ import {
   startAttempt,
   submitAttempt,
 } from "@/core/services/attempt.service";
+import { getSignedInUser } from "@/core/services/auth.service";
 import { getTest } from "@/core/services/test.service";
 
 // Server Actions for exam sessions. Every argument comes from the browser,
 // so validation still happens in core/services.
 
 export async function startAttemptAction(testId: string): Promise<void> {
+  if (!(await getSignedInUser())) {
+    redirect(`/sign-in?returnTo=${encodeURIComponent(`/tests/${testId}`)}`);
+  }
+
   const test = await getTest(testId);
   if (!test) throw new Error("Test not found.");
   if (test.skill !== "reading") {

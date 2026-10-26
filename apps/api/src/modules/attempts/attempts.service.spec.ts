@@ -7,6 +7,7 @@ import { AttemptsRepository } from "./attempts.repository";
 import { AttemptsService, DEADLINE_GRACE_MS } from "./attempts.service";
 
 const READING_TEST = "reading-test";
+const USER = "user-1";
 
 function question(id: string, number: number) {
   return { id, number, prompt: `Question ${number}`, options: null };
@@ -89,7 +90,7 @@ describe("AttemptsService", () => {
   });
 
   it("sets the deadline from the test duration", async () => {
-    const session = await service.start(READING_TEST, "exam");
+    const session = await service.start(USER, READING_TEST, "exam");
 
     const durationMs = Date.parse(session.endsAt) - Date.parse(session.startedAt);
     expect(durationMs).toBe(60 * 60_000);
@@ -97,54 +98,64 @@ describe("AttemptsService", () => {
   });
 
   it("rejects unknown and draft tests", async () => {
-    await expect(service.start("missing", "exam")).rejects.toBeInstanceOf(NotFoundException);
-    await expect(service.start("draft-test", "exam")).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.start(USER, "missing", "exam")).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.start(USER, "draft-test", "exam")).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it("keeps only answers to the test's own questions", async () => {
-    const { id } = await service.start(READING_TEST, "exam");
+    const { id } = await service.start(USER, READING_TEST, "exam");
 
-    await service.saveAnswers(id, { "r1-q1": "  TRUE ", "other-q": "x", "r1-q2": "" });
+    await service.saveAnswers(USER, id, { "r1-q1": "  TRUE ", "other-q": "x", "r1-q2": "" });
 
-    expect((await service.getSession(id)).answers).toEqual({ "r1-q1": "TRUE" });
+    expect((await service.getSession(USER, id)).answers).toEqual({ "r1-q1": "TRUE" });
   });
 
   it("grades on submit and blocks further changes", async () => {
-    const { id } = await service.start(READING_TEST, "exam");
+    const { id } = await service.start(USER, READING_TEST, "exam");
 
-    const result = await service.submit(id, { "r1-q1": "true", "r1-q2": "FALSE", "r1-q3": "green roofs" });
+    const result = await service.submit(USER, id, { "r1-q1": "true", "r1-q2": "FALSE", "r1-q3": "green roofs" });
 
     expect(result.rawScore).toBe(2);
     expect(result.totalQuestions).toBe(4);
     expect(result.band).toBeNull();
-    await expect(service.saveAnswers(id, {})).rejects.toBeInstanceOf(ConflictException);
-    await expect(service.submit(id, {})).rejects.toBeInstanceOf(ConflictException);
+    await expect(service.saveAnswers(USER, id, {})).rejects.toBeInstanceOf(ConflictException);
+    await expect(service.submit(USER, id, {})).rejects.toBeInstanceOf(ConflictException);
   });
 
   it("grades the last autosave when submitted after the deadline", async () => {
-    const { id } = await service.start(READING_TEST, "exam");
-    await service.saveAnswers(id, { "r1-q1": "TRUE" });
+    const { id } = await service.start(USER, READING_TEST, "exam");
+    await service.saveAnswers(USER, id, { "r1-q1": "TRUE" });
 
     jest.useFakeTimers({ now: Date.now() + 60 * 60_000 + DEADLINE_GRACE_MS + 1 });
-    const result = await service.submit(id, { "r1-q1": "TRUE", "r1-q2": "NOT GIVEN" });
+    const result = await service.submit(USER, id, { "r1-q1": "TRUE", "r1-q2": "NOT GIVEN" });
 
     expect(result.rawScore).toBe(1);
   });
 
   it("has no result before submission", async () => {
-    const { id } = await service.start(READING_TEST, "exam");
+    const { id } = await service.start(USER, READING_TEST, "exam");
 
-    await expect(service.getResult(id)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.getResult(USER, id)).rejects.toBeInstanceOf(NotFoundException);
     expect(await attempts.findById(id)).not.toBeNull();
   });
 
   it("leaves attempts on missing tests out of the history", async () => {
-    // The repository's demo attempt points at reading-demo-1, which this fake doesn't have.
-    const { id } = await service.start(READING_TEST, "exam");
-    await service.submit(id, { "r1-q1": "TRUE" });
+    const { id } = await service.start(USER, READING_TEST, "exam");
+    await service.submit(USER, id, { "r1-q1": "TRUE" });
+    await attempts.create({ ...(await attempts.findById(id))!, id: "gone", testId: "deleted-test" });
 
-    const history = await service.listSubmitted();
+    const history = await service.listSubmitted(USER);
 
     expect(history.map((summary) => summary.id)).toEqual([id]);
+  });
+
+  it("hides attempts from other users", async () => {
+    const { id } = await service.start(USER, READING_TEST, "exam");
+    await service.submit(USER, id, {});
+
+    await expect(service.getSession("user-2", id)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.saveAnswers("user-2", id, {})).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.getResult("user-2", id)).rejects.toBeInstanceOf(NotFoundException);
+    expect(await service.listSubmitted("user-2")).toEqual([]);
   });
 });

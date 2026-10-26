@@ -21,6 +21,10 @@ RUN turbo prune @ielts-mock/admin --docker
 #    don't change), then build. next.config.ts sets output: "standalone".
 FROM base AS builder
 ENV NEXT_TELEMETRY_DISABLED=1
+# NEXT_PUBLIC_ values are inlined into the build, so they must exist now
+# (App Platform passes BUILD_TIME env vars as build args).
+ARG NEXT_PUBLIC_WORKOS_REDIRECT_URI
+ENV NEXT_PUBLIC_WORKOS_REDIRECT_URI=${NEXT_PUBLIC_WORKOS_REDIRECT_URI}
 COPY --from=pruner /repo/out/json/ .
 RUN pnpm install --frozen-lockfile
 COPY --from=pruner /repo/out/full/ .

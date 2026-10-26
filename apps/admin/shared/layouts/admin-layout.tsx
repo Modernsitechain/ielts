@@ -2,8 +2,8 @@ import { FileText, GraduationCap } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-/** Header with navigation; pages own their width. */
-export function AdminLayout({ children }: { children: ReactNode }) {
+/** Header with navigation and the account slot; pages own their width. */
+export function AdminLayout({ account, children }: { account: ReactNode; children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white">
@@ -21,12 +21,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             <FileText className="h-4 w-4" aria-hidden />
             Tests
           </Link>
-          <span
-            className="ml-auto rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800"
-            title="Protected by a temporary admin key until WorkOS login is added"
-          >
-            Local only
-          </span>
+          <div className="ml-auto">{account}</div>
         </nav>
       </header>
       <main className="flex-1">{children}</main>

@@ -1,6 +1,8 @@
+import { LogIn } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { getSignedInUser } from "@/core/services/auth.service";
 import { getTest } from "@/core/services/test.service";
 import { startAttemptAction } from "@/feature/session/actions";
 import { QUESTION_TYPE_LABEL, SKILL_LABEL } from "@/shared/utils/format";
@@ -11,7 +13,7 @@ export default async function TestDetailPage({
   params: Promise<{ testId: string }>;
 }) {
   const { testId } = await params;
-  const test = await getTest(testId);
+  const [test, user] = await Promise.all([getTest(testId), getSignedInUser()]);
   if (!test) notFound();
 
   return (
@@ -43,7 +45,18 @@ export default async function TestDetailPage({
         ))}
       </ol>
 
-      {test.skill === "reading" ? (
+      {test.skill === "reading" && !user ? (
+        <div className="space-y-2">
+          <a
+            href={`/sign-in?returnTo=${encodeURIComponent(`/tests/${test.id}`)}`}
+            className="inline-flex items-center gap-1.5 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+          >
+            <LogIn className="h-4 w-4" aria-hidden />
+            Sign in to start
+          </a>
+          <p className="text-xs text-slate-500">You need an account so your results are saved.</p>
+        </div>
+      ) : test.skill === "reading" ? (
         <form action={startAttemptAction.bind(null, test.id)} className="space-y-2">
           <button
             type="submit"

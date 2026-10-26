@@ -11,6 +11,7 @@ Backend: `apps/api/AGENTS.md`.
 
 ```
 apps/web/
+├── proxy.ts              # sesi WorkOS: refresh token, halaman privat wajib login
 ├── app/                  # HANYA routing Next.js
 ├── core/
 │   ├── config/           # env.ts: validasi environment variable (Zod)
@@ -43,6 +44,9 @@ apps/web/
 ### `core/config/` — environment variable
 - `env.ts` memvalidasi semua env var server (Zod) dan mengekspor `env`.
   Baca env lewat `env`, jangan langsung dari `process.env`.
+- `auth.ts`: variabel WorkOS (`getAuthEnv()`, `getAppOrigin()`), dicek saat
+  request pertama (bukan saat build). Library AuthKit membacanya sendiri dari
+  `process.env`.
 - Menambah variabel: ikuti langkah di `docs/environments.md`.
 
 ### `core/models/` — tipe data
@@ -62,6 +66,9 @@ apps/web/
   - Base URL dari `env.API_URL` (default `http://localhost:4000` hanya untuk
     `APP_ENV=local`).
 - API hanya dipanggil dari server (Server Component/Action), tidak dari browser.
+- Jika user login, `api-client.ts` otomatis mengirim access token WorkOS
+  (`Authorization: Bearer …`). Cek login di feature lewat
+  `auth.service.ts` (`getSignedInUser()`), jangan memanggil `withAuth` langsung.
 - Semua file diawali `import "server-only";`.
 - Tidak ada logika bisnis di sini: waktu, validasi, dan penilaian dikerjakan
   `apps/api`. Services hanya meneruskan request & memetakan response.
@@ -101,6 +108,22 @@ Feature saat ini: `home`, `catalog`, `history`, `status`, `session`
   `shared`); relative import (`./`, `../`) hanya di dalam satu feature.
 - `@ielts-mock/question-schema` di-import lewat `core/models`, bukan langsung
   dari feature.
+
+## Login (WorkOS AuthKit)
+
+- `@workos-inc/authkit-nextjs`, mode public client (PKCE): web hanya butuh
+  `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`,
+  `NEXT_PUBLIC_WORKOS_REDIRECT_URI`. **Tidak ada `WORKOS_API_KEY` di web.**
+- `proxy.ts`: semua halaman wajib login **kecuali** yang ada di
+  `PUBLIC_PATHS` (`/`, `/tests`, `/tests/*`, `/status`, `/sign-in`,
+  `/callback`). Halaman publik baru wajib ditambahkan ke daftar itu.
+- Route: `/sign-in?returnTo=/path` (mulai login; tautkan dengan `<a>`, bukan
+  `next/link`), `/callback` (WorkOS mengembalikan user ke sini). Sign out:
+  `signOutAction` di `feature/auth/actions.ts`.
+- Hak akses tetap dicek API: tanpa token, `/attempts` menjawab 401, dan
+  attempt milik user lain menjawab 404.
+- `NEXT_PUBLIC_WORKOS_REDIRECT_URI` di-inline Next.js saat build, jadi image
+  Docker menerimanya sebagai build arg (lihat `Dockerfile`).
 
 ## Data & keamanan (wajib)
 

@@ -2,7 +2,7 @@
 
 import { RotateCcw, ServerCrash } from "lucide-react";
 
-/** Error boundary content, e.g. when apps/api is unreachable or rejects the admin key. */
+/** Error boundary content, e.g. when apps/api is unreachable. */
 export function RouteError({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <section className="mx-auto flex max-w-md flex-col items-center px-4 py-24 text-center">
@@ -11,7 +11,7 @@ export function RouteError({ error, reset }: { error: Error; reset: () => void }
       </span>
       <h1 className="mt-5 text-xl font-semibold">We couldn&apos;t load this page</h1>
       <p className="mt-2 text-sm text-slate-600">
-        Check that apps/api is running on the configured API_URL and that ADMIN_API_KEY matches.
+        Check that apps/api is running on the configured API_URL, then try again.
       </p>
       {error.message && (
         <p className="mt-3 rounded-md bg-slate-100 px-3 py-2 font-mono text-xs text-slate-700">

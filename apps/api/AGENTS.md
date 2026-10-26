@@ -37,8 +37,6 @@ apps/api/
 │   ├── common/               # dipakai lintas module: guard, filter, pipe, decorator
 │   │   ├── guards/auth.guard.ts          # wajib login (access token WorkOS) → request.user
 │   │   ├── guards/roles.guard.ts         # cek @Roles([...]) setelah AuthGuard
-│   │   ├── guards/admin-access.guard.ts  # SEMENTARA: kunci admin ATAU AuthGuard
-│   │   ├── guards/admin-key.guard.ts     # SEMENTARA: kunci admin sampai admin login WorkOS
 │   │   ├── decorators/                   # @CurrentUser(), @Roles([...])
 │   │   └── pipes/zod-validation.pipe.ts  # validasi body/params dengan Zod
 │   └── modules/
@@ -47,7 +45,7 @@ apps/api/
 │       ├── tests/            # GET /tests, GET /tests/:id (hanya published, tanpa kunci jawaban)
 │       │                     # + TestsRepository: satu-satunya query tabel konten tes
 │       ├── admin-tests/      # /admin/tests: CRUD, publish, unpublish (untuk apps/admin)
-│       ├── attempts/         # mulai, autosave, submit, hasil, riwayat
+│       ├── attempts/         # mulai, autosave, submit, hasil, riwayat (wajib login, per user)
 │       └── <fitur>/          # pola umum satu fitur:
 │           ├── <fitur>.module.ts
 │           ├── <fitur>.controller.ts
@@ -92,9 +90,6 @@ apps/api/
 - **Hak akses dicek di API**, bukan di frontend: setiap endpoint non-publik
   wajib memakai `@UseGuards(AuthGuard, RolesGuard)` + `@Roles([...])`.
   `/admin/*`: role `editor` & `admin`; publish/unpublish hanya `admin`.
-  Sementara, `/admin/*` memakai `AdminAccessGuard` yang juga menerima header
-  `x-admin-key` (= `ADMIN_API_KEY`, hanya `APP_ENV=local`/`development`,
-  bertindak sebagai admin) sampai `apps/admin` login dengan WorkOS.
 - **Kunci jawaban tidak pernah dikirim** di response sebelum attempt di-submit.
   Pengecualian: endpoint `/admin/*` (untuk editor konten, dilindungi guard).
 - **Tes draft tidak pernah dikembalikan** endpoint peserta (`/tests`,
