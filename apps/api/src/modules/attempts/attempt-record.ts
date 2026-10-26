@@ -1,4 +1,4 @@
-import type { AttemptMode } from "@ielts-mock/question-schema";
+import type { Annotation, AttemptMode } from "@ielts-mock/question-schema";
 
 /** Score stored when an attempt is submitted. */
 export type AttemptScore = {
@@ -22,6 +22,8 @@ export type AttemptRecord = {
   submittedAt: string | null;
   /** Candidate answers per question id. */
   answers: Record<string, string>;
+  /** Highlights and notes. */
+  annotations: Annotation[];
   /** Null until submitted. */
   score: AttemptScore | null;
 };

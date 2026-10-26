@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { Annotation } from "@/core/models/annotation";
 import type {
   AttemptMode,
   AttemptResult,
@@ -35,6 +36,15 @@ export async function saveAnswers(
   const response = await apiFetch(attemptPath(attemptId, "/answers"), {
     method: "PUT",
     body: { answers },
+  });
+  return response.ok;
+}
+
+/** Saves highlights and notes. False when the API refuses (submitted, invalid). */
+export async function saveAnnotations(attemptId: string, annotations: Annotation[]): Promise<boolean> {
+  const response = await apiFetch(attemptPath(attemptId, "/annotations"), {
+    method: "PUT",
+    body: { annotations },
   });
   return response.ok;
 }

@@ -1,8 +1,15 @@
 "use client";
 
+import { promptBlockId, promptParts } from "@/core/models/annotation";
 import { FIXED_CHOICES, type Question, type QuestionGroup } from "@/core/models/test";
 
-const BLANK = /_{3,}/;
+import { HighlightableText } from "../annotations/highlightable-text";
+
+/** A prompt's text around its gap, each part highlightable on its own. */
+function PromptPart({ question, part }: { question: Question; part: number }) {
+  const text = promptParts(question.prompt)[part];
+  return text ? <HighlightableText blockId={promptBlockId(question.id, part)} text={text} /> : null;
+}
 
 type Props = {
   group: QuestionGroup;
@@ -120,15 +127,13 @@ export function QuestionGroupView({
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           {payload.title && <p className="mb-2 font-semibold">{payload.title}</p>}
           <p className="leading-loose">
-            {group.questions.map((question) => {
-              const [before, after] = question.prompt.split(BLANK);
-              return (
+            {group.questions.map((question) => (
                 <span
                   key={question.id}
                   id={`question-${question.number}`}
                   onFocus={() => onFocusQuestion(question.number)}
                 >
-                  {before}
+                  <PromptPart question={question} part={0} />
                   <GapInput
                     question={question}
                     value={answers[question.id] ?? ""}
@@ -136,10 +141,9 @@ export function QuestionGroupView({
                     highlighted={question.number === currentNumber}
                     onAnswer={onAnswer}
                   />
-                  {after}{" "}
+                  <PromptPart question={question} part={1} />{" "}
                 </span>
-              );
-            })}
+            ))}
           </p>
         </div>
       ) : (
@@ -160,7 +164,11 @@ export function QuestionGroupView({
                 {question.number}
               </span>
               <div className="flex-1 space-y-2">
-                {showPrompt && <p>{question.prompt}</p>}
+                {showPrompt && (
+                  <p>
+                    <PromptPart question={question} part={0} />
+                  </p>
+                )}
                 {renderInput(question)}
               </div>
             </li>
@@ -179,12 +187,11 @@ type InputProps = {
 };
 
 function GapSentence(props: InputProps) {
-  const [before, after] = props.question.prompt.split(BLANK);
   return (
     <p className="leading-loose">
-      {before}
+      <PromptPart question={props.question} part={0} />
       <GapInput {...props} highlighted={false} />
-      {after}
+      <PromptPart question={props.question} part={1} />
     </p>
   );
 }

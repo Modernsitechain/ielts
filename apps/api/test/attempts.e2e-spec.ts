@@ -151,6 +151,38 @@ describe("Attempts (e2e)", () => {
     expect((result.body as AttemptResult).items.map((item) => item.isCorrect)).toEqual([true, false]);
   });
 
+  it("stores highlights and notes on the test's text", async () => {
+    const server = app.getHttpServer();
+    const started = await request(server).post("/attempts").set(candidate).send({ testId, mode: "exam" }).expect(201);
+    const session = started.body as AttemptSession;
+    expect(session.annotations).toEqual([]);
+
+    const sectionId = (
+      (await request(server).get(`/admin/tests/${testId}`).set(admin).expect(200)).body as AdminTest
+    ).sections[0]?.id;
+    const annotations = [
+      { blockId: `p:${sectionId}:0`, start: 0, end: 4, note: "Key word" },
+      { blockId: `q:${questionIds[0]}:0`, start: 5, end: 9, note: null },
+    ];
+    await request(server).put(`/attempts/${session.id}/annotations`).set(candidate).send({ annotations }).expect(204);
+
+    const reloaded = await request(server).get(`/attempts/${session.id}`).set(candidate).expect(200);
+    expect((reloaded.body as AttemptSession).annotations).toEqual(annotations);
+
+    // Unknown text, out-of-range offsets and other users are refused.
+    await request(server)
+      .put(`/attempts/${session.id}/annotations`)
+      .set(candidate)
+      .send({ annotations: [{ blockId: "p:nope:0", start: 0, end: 4, note: null }] })
+      .expect(400);
+    await request(server)
+      .put(`/attempts/${session.id}/annotations`)
+      .set(candidate)
+      .send({ annotations: [{ ...annotations[0], end: 9999 }] })
+      .expect(400);
+    await request(server).put(`/attempts/${session.id}/annotations`).set(admin).send({ annotations }).expect(404);
+  });
+
   it("refuses to delete a test that has attempts", async () => {
     const server = app.getHttpServer();
     await request(server).post(`/admin/tests/${testId}/unpublish`).set(admin).expect(200);

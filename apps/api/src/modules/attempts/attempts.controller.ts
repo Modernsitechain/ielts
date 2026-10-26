@@ -1,9 +1,11 @@
 import { Body, Controller, Get, HttpCode, Param, Post, Put, UseGuards } from "@nestjs/common";
-import type {
-  AttemptResult,
-  AttemptSession,
-  AttemptSummary,
-  CurrentUser as CurrentUserData,
+import {
+  type Annotation,
+  type AttemptResult,
+  type AttemptSession,
+  type AttemptSummary,
+  type CurrentUser as CurrentUserData,
+  saveAnnotationsSchema,
 } from "@ielts-mock/question-schema";
 
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
@@ -55,6 +57,17 @@ export class AttemptsController {
     @Body(new ZodValidationPipe(saveAnswersSchema)) body: SaveAnswersDto,
   ): Promise<void> {
     await this.attemptsService.saveAnswers(user.id, id, body.answers);
+  }
+
+  /** Highlights and notes, replacing the saved ones. */
+  @Put(":id/annotations")
+  @HttpCode(204)
+  async saveAnnotations(
+    @CurrentUser() user: CurrentUserData,
+    @Param("id") id: string,
+    @Body(new ZodValidationPipe(saveAnnotationsSchema)) body: { annotations: Annotation[] },
+  ): Promise<void> {
+    await this.attemptsService.saveAnnotations(user.id, id, body.annotations);
   }
 
   @Post(":id/submit")

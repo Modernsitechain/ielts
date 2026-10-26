@@ -89,8 +89,21 @@ Alasan desain:
 - Index `(user_id, submitted_at)` untuk halaman riwayat, `(test_id)` untuk cek
   hapus tes.
 
-Belum ada: `annotations` (dibuat bersama fitur highlight), `purchases`,
-`payment_events`.
+## Tabel `annotations` (highlight & catatan)
+
+| Kolom                          | Isi                                                        |
+| ------------------------------ | ---------------------------------------------------------- |
+| `attempt_id`                   | → `attempts.id` (CASCADE)                                  |
+| `block_id`                     | blok teks: `p:<sectionId>:<paragraf>` atau `q:<questionId>:<bagian>` |
+| `start_offset`, `end_offset`   | posisi karakter di dalam blok (CHECK 0 ≤ start < end)      |
+| `note`                         | null = highlight biasa                                     |
+
+PK (`attempt_id`, `block_id`, `start_offset`): dalam satu blok highlight tidak
+pernah tumpang-tindih (digabung oleh fungsi di `question-schema`). Satu warna
+(kuning), jadi tidak ada kolom warna. Disimpan sekaligus (hapus + insert) seperti
+jawaban.
+
+Belum ada: `purchases`, `payment_events`.
 
 ## Perintah (dari root repo)
 

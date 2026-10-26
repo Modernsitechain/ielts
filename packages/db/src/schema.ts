@@ -186,6 +186,29 @@ export const attemptAnswers = pgTable(
   (table) => [primaryKey({ columns: [table.attemptId, table.questionId] })],
 );
 
+/**
+ * Highlights and notes on a test's text (`blockId` + character range; see
+ * annotation.ts in @ielts-mock/question-schema). Ranges in one block never
+ * overlap, so (attempt, block, start) identifies an annotation.
+ */
+export const annotations = pgTable(
+  "annotations",
+  {
+    attemptId: uuid("attempt_id")
+      .notNull()
+      .references(() => attempts.id, { onDelete: "cascade" }),
+    blockId: text("block_id").notNull(),
+    startOffset: integer("start_offset").notNull(),
+    endOffset: integer("end_offset").notNull(),
+    /** Null for a plain highlight. */
+    note: text("note"),
+  },
+  (table) => [
+    primaryKey({ columns: [table.attemptId, table.blockId, table.startOffset] }),
+    check("annotations_valid_range", sql`${table.startOffset} >= 0 AND ${table.endOffset} > ${table.startOffset}`),
+  ],
+);
+
 // Relations let apps/api load a whole test in one query (`db.query.tests`).
 // They don't change the database; foreign keys above do.
 
@@ -209,6 +232,11 @@ export const questionsRelations = relations(questions, ({ one }) => ({
 
 export const attemptsRelations = relations(attempts, ({ many }) => ({
   answers: many(attemptAnswers),
+  annotations: many(annotations),
+}));
+
+export const annotationsRelations = relations(annotations, ({ one }) => ({
+  attempt: one(attempts, { fields: [annotations.attemptId], references: [attempts.id] }),
 }));
 
 export const attemptAnswersRelations = relations(attemptAnswers, ({ one }) => ({

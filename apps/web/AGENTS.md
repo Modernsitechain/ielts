@@ -125,6 +125,26 @@ Feature saat ini: `home`, `catalog`, `history`, `status`, `session`
 - `NEXT_PUBLIC_WORKOS_REDIRECT_URI` di-inline Next.js saat build, jadi image
   Docker menerimanya sebagai build arg (lihat `Dockerfile`).
 
+## Highlight & catatan (sesi Reading)
+
+- Kode: `feature/session/reading/annotations/`.
+  - `HighlightableText`: teks yang bisa di-highlight. Elemennya punya
+    `data-block-id` dan **hanya boleh berisi teks itu** (plus ikon SVG tanpa
+    teks), karena posisi seleksi dihitung dari isi teksnya (`selection.ts`).
+  - `ContextMenu`: **hanya lewat klik kanan** (memilih teks tidak memunculkan
+    apa pun). Klik kanan pada teks terpilih → Highlight, Add note, Remove
+    highlight (jika mengenai highlight: menghapus **seluruh** highlight yang
+    terkena, walaupun yang dipilih hanya sebagian). Klik kanan pada highlight → Add/Edit
+    note, Remove highlight. Di tempat lain menu bawaan browser tetap muncul.
+  - `NoteEditor`, `NotesPanel` (catatan juga dibuka dari panel ini), konteks
+    `AnnotationsProvider`.
+- Logika gabung/potong highlight ada di `@ielts-mock/question-schema`
+  (`annotation.ts`), di-import lewat `core/models/annotation.ts`.
+- Teks baru yang ingin bisa di-highlight: bungkus dengan `HighlightableText`
+  dan tambahkan bloknya di `textBlocks()` (API menolak blok yang tidak dikenal).
+- Disimpan otomatis ke API (`PUT /attempts/:id/annotations`), 0,8 detik setelah
+  perubahan terakhir, sama seperti jawaban.
+
 ## Data & keamanan (wajib)
 
 - Web tidak pernah menerima kunci jawaban sebelum submit; API yang menjamin.

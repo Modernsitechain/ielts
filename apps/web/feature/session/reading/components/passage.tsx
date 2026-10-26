@@ -1,4 +1,7 @@
+import { paragraphBlockId } from "@/core/models/annotation";
 import type { Section } from "@/core/models/test";
+
+import { HighlightableText } from "../annotations/highlightable-text";
 
 export function Passage({ section }: { section: Section }) {
   return (
@@ -9,7 +12,11 @@ export function Passage({ section }: { section: Section }) {
           {paragraph.label && (
             <span className="w-4 shrink-0 font-semibold text-slate-900">{paragraph.label}</span>
           )}
-          <span className="whitespace-pre-line">{paragraph.text}</span>
+          <HighlightableText
+            blockId={paragraphBlockId(section.id, index)}
+            text={paragraph.text}
+            className="whitespace-pre-line"
+          />
         </p>
       ))}
     </article>

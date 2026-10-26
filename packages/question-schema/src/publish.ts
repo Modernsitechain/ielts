@@ -1,3 +1,4 @@
+import { BLANK_PATTERN as BLANK } from "./annotation.js";
 import { FIXED_CHOICES, isCompletionType, type TestInput } from "./authoring.js";
 import { withinWordLimit } from "./scoring.js";
 
@@ -11,7 +12,6 @@ export type PublishCheck = {
   warnings: string[];
 };
 
-const BLANK = /_{3,}/;
 const FULL_TEST_QUESTIONS = 40;
 const FULL_TEST_PASSAGES = 3;
 

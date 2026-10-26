@@ -1,9 +1,9 @@
-import { ConflictException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, NotFoundException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 
 import { randomUUID } from "node:crypto";
 
-import type { AttemptSummary } from "@ielts-mock/question-schema";
+import type { Annotation, AttemptSummary } from "@ielts-mock/question-schema";
 
 import type { TestRecord } from "../tests/test-record";
 import { TestsRepository } from "../tests/tests.repository";
@@ -75,12 +75,23 @@ const fakeTestsRepository: Pick<TestsRepository, "findById"> = {
 
 /** In-memory stand-in for the PostgreSQL repository. */
 class FakeAttemptsRepository
-  implements Pick<AttemptsRepository, "create" | "findById" | "saveAnswers" | "submit" | "findSubmittedSummaries">
+  implements
+    Pick<
+      AttemptsRepository,
+      "create" | "findById" | "saveAnswers" | "saveAnnotations" | "submit" | "findSubmittedSummaries"
+    >
 {
   readonly rows = new Map<string, AttemptRecord>();
 
   async create(attempt: NewAttempt): Promise<AttemptRecord> {
-    const record: AttemptRecord = { ...attempt, id: randomUUID(), submittedAt: null, answers: {}, score: null };
+    const record: AttemptRecord = {
+      ...attempt,
+      id: randomUUID(),
+      submittedAt: null,
+      answers: {},
+      annotations: [],
+      score: null,
+    };
     this.rows.set(record.id, record);
     return structuredClone(record);
   }
@@ -93,6 +104,11 @@ class FakeAttemptsRepository
   async saveAnswers(id: string, answers: Record<string, string>): Promise<void> {
     const record = this.rows.get(id);
     if (record) record.answers = { ...answers };
+  }
+
+  async saveAnnotations(id: string, list: Annotation[]): Promise<void> {
+    const record = this.rows.get(id);
+    if (record) record.annotations = structuredClone(list);
   }
 
   async submit(id: string, answers: Record<string, string>, score: AttemptScore, submittedAt: string) {
@@ -220,6 +236,23 @@ describe("AttemptsService", () => {
     const { id } = await service.start(USER, READING_TEST, "exam");
     await service.submit(USER, id, {});
     await expect(service.submit(USER, id, {})).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it("saves annotations that point at the test's text", async () => {
+    const { id } = await service.start(USER, READING_TEST, "exam");
+    const highlight = { blockId: "p:s1:0", start: 0, end: 4, note: "why" };
+    await service.saveAnnotations(USER, id, [highlight]);
+    expect((await service.getSession(USER, id)).annotations).toEqual([highlight]);
+
+    await expect(
+      service.saveAnnotations(USER, id, [{ ...highlight, blockId: "p:other:0" }]),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    await expect(service.saveAnnotations(USER, id, [{ ...highlight, end: 99 }])).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+
+    await service.submit(USER, id, {});
+    await expect(service.saveAnnotations(USER, id, [])).rejects.toBeInstanceOf(ConflictException);
   });
 
   it("hides attempts from other users", async () => {

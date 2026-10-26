@@ -250,6 +250,17 @@ Butuh langkah dari developer dulu (token). Detail CI: `docs/ci.md`.
   setState di dalam effect (autosave web) dan variabel diubah saat render
   (nomor grup di editor admin); keduanya diperbaiki. Belum: deploy hanya jika
   CI hijau. Detail: `docs/ci.md`.
+- [2026-10-27] Reading Tahap A: highlight & catatan. Tabel `annotations`
+  (migrasi `0003_annotations`), fungsi murni gabung/potong/validasi di
+  `question-schema` (+ 7 test Vitest), `PUT /attempts/:id/annotations` dengan
+  validasi blok & posisi terhadap isi tes (+ unit & e2e). Web: highlight kuning
+  di passage & teks soal (termasuk soal isian di kedua sisi kotak jawaban),
+  menu hanya lewat klik kanan (permintaan developer: memilih teks tidak
+  memunculkan menu; klik kanan pada highlight untuk menghapus/catatan), seleksi
+  lintas paragraf, editor catatan, panel Notes, autosave. Menu dirender lewat
+  portal dengan posisi inline (sebelumnya muncul di kiri bawah).
+  Logika seleksi diuji di Chrome headless. Berikutnya: Tahap B (flag
+  tersimpan), C (font & kontras), D (polesan).
 
 ## Yang masih bingung
 <!-- Tulis di sini, Claude akan menjelaskan ulang -->

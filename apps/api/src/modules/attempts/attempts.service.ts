@@ -1,12 +1,20 @@
-import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import {
+  type Annotation,
   type AttemptMode,
   type AttemptResult,
   type AttemptSession,
   type AttemptSummary,
+  checkAnnotations,
   isAnswerCorrect,
   type ResultItem,
   rawScoreToBand,
+  textBlocks,
 } from "@ielts-mock/question-schema";
 
 import type { TestRecord } from "../tests/test-record";
@@ -26,6 +34,7 @@ function toSession(attempt: AttemptRecord): AttemptSession {
     endsAt: attempt.endsAt,
     submittedAt: attempt.submittedAt,
     answers: attempt.answers,
+    annotations: attempt.annotations,
   };
 }
 
@@ -134,6 +143,20 @@ export class AttemptsService {
 
     const test = await this.requireTest(attempt.testId);
     await this.attemptsRepository.saveAnswers(id, sanitizeAnswers(test, answers));
+  }
+
+  /**
+   * Saves highlights and notes (all at once, like answers). Allowed until
+   * submission; they must point at text that exists in the test.
+   */
+  async saveAnnotations(userId: string, id: string, list: Annotation[]): Promise<void> {
+    const attempt = await this.requireAttempt(userId, id);
+    if (attempt.submittedAt) throw new ConflictException("Attempt already submitted");
+
+    const test = await this.requireTest(attempt.testId);
+    const problems = checkAnnotations(list, textBlocks(test));
+    if (problems.length) throw new BadRequestException({ message: "Invalid annotations", errors: problems });
+    await this.attemptsRepository.saveAnnotations(id, list);
   }
 
   /**

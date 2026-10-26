@@ -1,6 +1,18 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { and, attemptAnswers, attempts, desc, eq, isNotNull, isNull, sql, tests } from "@ielts-mock/db";
-import type { AttemptSummary } from "@ielts-mock/question-schema";
+import {
+  and,
+  annotations,
+  asc,
+  attemptAnswers,
+  attempts,
+  desc,
+  eq,
+  isNotNull,
+  isNull,
+  sql,
+  tests,
+} from "@ielts-mock/db";
+import type { Annotation, AttemptSummary } from "@ielts-mock/question-schema";
 
 import { DATABASE, type Database } from "../../database/database.module";
 import type { AttemptRecord, AttemptScore, NewAttempt } from "./attempt-record";
@@ -20,13 +32,16 @@ export class AttemptsRepository {
       })
       .returning({ id: attempts.id });
     if (!row) throw new Error("Attempt was not created");
-    return { ...attempt, id: row.id, submittedAt: null, answers: {}, score: null };
+    return { ...attempt, id: row.id, submittedAt: null, answers: {}, annotations: [], score: null };
   }
 
   async findById(id: string): Promise<AttemptRecord | null> {
     const row = await this.db.query.attempts.findFirst({
       where: eq(attempts.id, id),
-      with: { answers: true },
+      with: {
+        answers: true,
+        annotations: { orderBy: [asc(annotations.blockId), asc(annotations.startOffset)] },
+      },
     });
     if (!row) return null;
 
@@ -45,6 +60,12 @@ export class AttemptsRepository {
       endsAt: row.endsAt.toISOString(),
       submittedAt: row.submittedAt?.toISOString() ?? null,
       answers,
+      annotations: row.annotations.map((a) => ({
+        blockId: a.blockId,
+        start: a.startOffset,
+        end: a.endOffset,
+        note: a.note,
+      })),
       score:
         row.submittedAt && row.rawScore !== null && row.totalQuestions !== null
           ? { rawScore: row.rawScore, totalQuestions: row.totalQuestions, band: row.band, correct }
@@ -63,6 +84,24 @@ export class AttemptsRepository {
       }));
       if (rows.length) await tx.insert(attemptAnswers).values(rows);
       await tx.update(attempts).set({ updatedAt: sql`now()` }).where(eq(attempts.id, id));
+    });
+  }
+
+  /** Replaces all highlights and notes of an attempt. */
+  async saveAnnotations(id: string, list: Annotation[]): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      await tx.delete(annotations).where(eq(annotations.attemptId, id));
+      if (list.length) {
+        await tx.insert(annotations).values(
+          list.map((a) => ({
+            attemptId: id,
+            blockId: a.blockId,
+            startOffset: a.start,
+            endOffset: a.end,
+            note: a.note,
+          })),
+        );
+      }
     });
   }
 

@@ -17,6 +17,11 @@ dipakai oleh `apps/api`, `apps/web`, dan `apps/admin`.
 - `src/publish.ts` — `checkPublishReadiness`: syarat sebelum tes boleh
   publish (dipakai API untuk menolak, admin untuk menampilkan checklist).
 - `src/attempt.ts` — AttemptSession, AttemptSummary, AttemptResult, ResultItem.
+- `src/annotation.ts` — highlight & catatan: skema Zod, id blok teks
+  (`paragraphBlockId`, `promptBlockId`, `promptParts`, `textBlocks`), fungsi
+  murni `addHighlight`, `removeHighlights`, `setNote`, `removeAnnotation`,
+  `segmentText`, `checkAnnotations` (dipakai web untuk UI, API untuk validasi).
+  `BLANK_PATTERN` (gap soal isian) juga di sini. Test: `annotation.test.ts`.
 - `src/user.ts` — `USER_ROLES`, `UserRole`, `ADMIN_APP_ROLES`, `CurrentUser`
   (response `GET /me`).
 - `src/scoring.ts` — fungsi murni: normalisasi jawaban, batas kata, cek

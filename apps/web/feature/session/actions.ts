@@ -2,7 +2,9 @@
 
 import { redirect } from "next/navigation";
 
+import type { Annotation } from "@/core/models/annotation";
 import {
+  saveAnnotations,
   saveAnswers,
   startAttempt,
   submitAttempt,
@@ -34,6 +36,13 @@ export async function saveAnswersAction(
   answers: Record<string, string>,
 ): Promise<boolean> {
   return saveAnswers(attemptId, answers);
+}
+
+export async function saveAnnotationsAction(
+  attemptId: string,
+  annotations: Annotation[],
+): Promise<boolean> {
+  return saveAnnotations(attemptId, annotations);
 }
 
 export async function submitAttemptAction(

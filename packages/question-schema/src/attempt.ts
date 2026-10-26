@@ -1,3 +1,4 @@
+import type { Annotation } from "./annotation.js";
 import type { Skill } from "./test.js";
 
 export type AttemptMode = "exam" | "practice";
@@ -13,6 +14,8 @@ export type AttemptSession = {
   submittedAt: string | null;
   /** Last saved answers per question id. */
   answers: Record<string, string>;
+  /** Highlights and notes, saved like answers. */
+  annotations: Annotation[];
 };
 
 export type AttemptSummary = {

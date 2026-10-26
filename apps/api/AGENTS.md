@@ -45,7 +45,7 @@ apps/api/
 │       ├── tests/            # GET /tests, GET /tests/:id (hanya published, tanpa kunci jawaban)
 │       │                     # + TestsRepository: satu-satunya query tabel konten tes
 │       ├── admin-tests/      # /admin/tests: CRUD, publish, unpublish (untuk apps/admin)
-│       ├── attempts/         # mulai, autosave, submit, hasil, riwayat (wajib login, per user)
+│       ├── attempts/         # mulai, autosave, highlight/catatan, submit, hasil, riwayat (wajib login, per user)
 │       └── <fitur>/          # pola umum satu fitur:
 │           ├── <fitur>.module.ts
 │           ├── <fitur>.controller.ts
