@@ -30,7 +30,9 @@ apps/api/
 │   ├── config/
 │   │   └── env.ts            # skema Zod semua env var; app gagal start jika tidak valid
 │   ├── database/
-│   │   └── database.module.ts  # koneksi PostgreSQL + Drizzle (global)
+│   │   ├── database.module.ts  # koneksi PostgreSQL + Drizzle (global)
+│   │   ├── migrate.ts          # node dist/database/migrate.js (pre-deploy job)
+│   │   └── seed.ts             # node dist/database/seed.js (seed demo di server)
 │   ├── common/               # dipakai lintas module: guard, filter, pipe, decorator
 │   │   ├── guards/admin-key.guard.ts     # SEMENTARA: kunci admin sampai WorkOS
 │   │   └── pipes/zod-validation.pipe.ts  # validasi body/params dengan Zod
@@ -124,5 +126,7 @@ apps/api/
   production disimpan di DigitalOcean, bukan di file.
 - Perintah (dari folder ini): `pnpm dev` (watch, port 4000), `pnpm build`,
   `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`.
+- Deploy: `Dockerfile` di folder ini (build dari root repo), app spec di
+  `.do/`. Langkah lengkap: `docs/deployment.md`.
 - TypeScript 6 dipakai di app ini (sesuai template resmi NestJS 12), bukan
   TypeScript 7 seperti `apps/web`.

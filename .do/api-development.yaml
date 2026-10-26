@@ -1,0 +1,81 @@
+# DigitalOcean App Platform spec: apps/api, environment "development".
+# Deploys on every push to the `development` branch. Setup steps: docs/deployment.md.
+#   Create: doctl apps create --spec .do/api-development.yaml
+#   Update: doctl apps update <app-id> --spec .do/api-development.yaml
+# No secrets here: the database URL and CA certificate are injected by App
+# Platform from the attached database (${db.DATABASE_URL}, ${db.CA_CERT}).
+name: ielts-api-development
+region: sgp
+
+services:
+  - name: api
+    github:
+      repo: Modernsitechain/ielts
+      branch: development
+      deploy_on_push: true
+    source_dir: /
+    dockerfile_path: apps/api/Dockerfile
+    http_port: 4000
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    instance_count: 1
+    health_check:
+      http_path: /health
+    envs:
+      - key: APP_ENV
+        value: development
+        scope: RUN_TIME
+      - key: PORT
+        value: "4000"
+        scope: RUN_TIME
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+        scope: RUN_TIME
+      - key: DATABASE_CA_CERT
+        value: ${db.CA_CERT}
+        scope: RUN_TIME
+
+jobs:
+  # Runs before each new version goes live; a failed migration stops the deploy.
+  - name: migrate
+    kind: PRE_DEPLOY
+    github:
+      repo: Modernsitechain/ielts
+      branch: development
+      deploy_on_push: true
+    source_dir: /
+    dockerfile_path: apps/api/Dockerfile
+    run_command: node dist/database/migrate.js
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    instance_count: 1
+    envs:
+      - key: APP_ENV
+        value: development
+        scope: RUN_TIME
+      - key: PORT
+        value: "4000"
+        scope: RUN_TIME
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+        scope: RUN_TIME
+      - key: DATABASE_CA_CERT
+        value: ${db.CA_CERT}
+        scope: RUN_TIME
+
+databases:
+  # Existing Managed PostgreSQL cluster; one database and user per environment.
+  - name: db
+    engine: PG
+    production: true
+    cluster_name: ielts-db
+    db_name: ielts_mock_development
+    db_user: ielts_development
+
+# TEMPORARY public route so /health and /tests can be checked in a browser.
+# Remove it once apps/web is deployed and calls the API internally.
+ingress:
+  rules:
+    - component:
+        name: api
+      match:
+        path:
+          prefix: /

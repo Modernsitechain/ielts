@@ -10,7 +10,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "drizzle"
   ],
   "scripts": {
     "build": "tsc",

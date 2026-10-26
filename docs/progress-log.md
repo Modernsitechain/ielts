@@ -7,6 +7,11 @@ Fase: 1 → sebagian Fase 2 & 3 (database konten + admin Reading) — minggu ke-
 sudah disusun di `docs/deployment.md`, belum dikerjakan. Mulai dari bagian "Keputusan yang
 perlu diambil" di file itu.
 
+**Deploy backend sedang disiapkan**: kode siap (Dockerfile, app spec
+`.do/`, migrasi otomatis). Developer lanjut dari Tahap 1 di
+`docs/deployment.md` (buat cluster database `ielts-db`). Kerja sekarang di
+branch `development`.
+
 **Admin Reading sudah jalan di lokal** (`apps/admin`, port 3001): buat tes,
 passage, group soal (7 tipe Reading), soal & jawaban, publish. Konten tes
 tersimpan di PostgreSQL (`packages/db`). Langkah berikut: developer mencoba
@@ -34,9 +39,13 @@ catatan sesi 2026-10-24.
 - Deploy: web & api (dan nanti admin) di DigitalOcean memakai Docker;
   database DigitalOcean Managed PostgreSQL. Tidak memakai Vercel
 - Environment: `local`, `development` (branch `development`), `staging`
-  (nanti), `production` (branch `main`), dibedakan dengan `APP_ENV`. Sampai
-  deploy pertama semua kerja di `main`; pindah ke `development` menunggu
-  aba-aba developer. Detail: `docs/environments.md`
+  (nanti), `production` (branch `main`), dibedakan dengan `APP_ENV`. Sejak
+  2026-10-26 kerja di branch `development`; rilis = merge ke `main`. Detail:
+  `docs/environments.md`
+- Deploy: App Platform (bukan Droplet); satu cluster Managed PostgreSQL
+  `ielts-db` dengan database & user terpisah per environment; migrasi sebagai
+  pre-deploy job; route publik API sementara sampai web di-deploy; seed demo
+  hanya di development
 - Runtime: Node 24 LTS (`.nvmrc`); dibutuhkan Jest untuk NestJS 12 (ESM)
 - Admin: fokus Reading dulu. Passage disimpan sebagai daftar paragraf
   berlabel (A, B, C…). Tes published read-only (unpublish untuk edit); publish
@@ -49,11 +58,10 @@ catatan sesi 2026-10-24.
   dalam bahasa Indonesia. Dokumen di `docs/` tetap berbahasa Indonesia.
 
 ## Keputusan yang belum diambil
-- Hosting PostgreSQL untuk production
 - Storage audio & gambar (sebelumnya Supabase Storage; kandidat: Cloudflare R2)
 - Harga & durasi paket
-- Layanan DigitalOcean untuk menjalankan container: App Platform
-  (rekomendasi) atau Droplet (lihat `docs/deployment.md`)
+- Cara konten buatan admin (lokal) sampai ke production: deploy admin setelah
+  WorkOS, atau export/import
 
 ## Catatan per sesi
 <!-- Format: [tanggal] apa yang dikerjakan / dipelajari -->
@@ -134,6 +142,13 @@ catatan sesi 2026-10-24.
   daftar tes, buat tes, editor lengkap. `apps/web`: passage dari daftar
   paragraf dan tampilan 4 tipe soal baru. Varian jawaban "50 000" di demo
   dihapus karena dianggap melebihi batas kata.
+- [2026-10-26] Persiapan deploy backend ke 2 environment. Branch
+  `development` dibuat. Ditambahkan `apps/api/Dockerfile` (turbo prune + pnpm
+  deploy, non-root), `.dockerignore`, app spec App Platform
+  `.do/api-development.yaml` & `.do/api-production.yaml`, script
+  `dist/database/migrate.js` (pre-deploy job) & `seed.js` di image API.
+  `/axl push` kini mendorong `development` atau `main`. Image belum di-build
+  dengan Docker (simulasi tahap build tanpa Docker berhasil).
 
 ## Yang masih bingung
 <!-- Tulis di sini, Claude akan menjelaskan ulang -->

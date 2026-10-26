@@ -13,8 +13,10 @@ packages/db/
 └── src/
     ├── schema.ts         # tabel, enum, constraint, relations
     ├── content.ts        # tipe pohon konten + flattenContent (pohon → baris)
-    ├── load-env.ts       # membaca DATABASE_URL untuk script seed
-    ├── seed.ts           # pnpm db:seed
+    ├── demo.ts           # seedDemoTests(db): dipakai pnpm db:seed & image API
+    ├── migrations.ts     # MIGRATIONS_FOLDER: lokasi drizzle/ (repo & image)
+    ├── load-env.ts       # membaca DATABASE_URL untuk script seed lokal
+    ├── seed.ts           # pnpm db:seed (laptop)
     ├── seed-data/        # tes demo (konten orisinal)
     └── index.ts          # export publik untuk apps/api
 ```
@@ -80,6 +82,13 @@ Database test: tambahkan `DB_ENV=test` di depan, misalnya
 
 Jangan mengedit migrasi yang sudah di-commit atau sudah jalan di server.
 Buat migrasi baru.
+
+## Di server (App Platform)
+
+Folder `drizzle/` ikut terpasang di image API (`"files"` di package.json).
+Migrasi dijalankan oleh pre-deploy job `node dist/database/migrate.js` dan
+seed demo oleh `node dist/database/seed.js` (keduanya di `apps/api`, memakai
+setelan SSL/CA yang sama dengan API). Lihat `docs/deployment.md`.
 
 ## Aturan
 

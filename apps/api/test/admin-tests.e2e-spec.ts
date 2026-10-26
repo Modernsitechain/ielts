@@ -8,7 +8,8 @@ import { AppModule } from "../src/app.module";
 
 // Full admin flow against the test database (.env.test). Needs the tables:
 // run `DB_ENV=test pnpm db:migrate` once (see packages/db/AGENTS.md).
-const ADMIN_KEY = "e2e-admin-key-0123456789abcdef0123456789";
+// Set in test/setup-env.ts, before the app's configuration is loaded.
+const ADMIN_KEY = process.env.ADMIN_API_KEY ?? "";
 
 const content: TestInput = {
   title: "E2E Reading test",
@@ -37,7 +38,6 @@ describe("Admin tests (e2e)", () => {
   let testId: string | undefined;
 
   beforeAll(async () => {
-    process.env.ADMIN_API_KEY = ADMIN_KEY;
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication();
     await app.init();

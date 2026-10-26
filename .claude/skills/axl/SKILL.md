@@ -1,6 +1,6 @@
 ---
 name: axl
-description: Perintah pribadi Axel untuk git di repo ini. `/axl commit` meng-commit semua perubahan dengan pesan sesuai konvensi; `/axl push` mem-push branch main ke origin.
+description: Perintah pribadi Axel untuk git di repo ini. `/axl commit` meng-commit semua perubahan dengan pesan sesuai konvensi; `/axl push` mem-push branch aktif (development atau main) ke origin.
 argument-hint: commit | push
 disable-model-invocation: true
 allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git add:*), Bash(git commit:*), Bash(git push:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(git fetch:*)
@@ -38,19 +38,24 @@ dikenal, tampilkan daftar sub-perintah di bawah dan berhenti.
    - Akhiri dengan baris attribution yang diminta sistem, jika ada.
 5. Tampilkan hash dan judul commit. Jangan push.
 
-## `push` — push ke main
+## `push` — push branch aktif
 
-1. Pastikan branch saat ini `main` (`git branch --show-current`). Jika bukan,
-   berhenti dan tanyakan dulu.
+1. Cek branch saat ini (`git branch --show-current`). Hanya `development`
+   atau `main` yang boleh di-push. Jika branch lain, berhenti dan tanyakan.
 2. Jika ada perubahan yang belum di-commit, ingatkan (jangan commit otomatis).
-3. `git push origin main`. **Jangan pernah force push.**
-4. Jika push ditolak karena remote lebih baru, berhenti dan jelaskan;
+3. Jika branch-nya `main`, ingatkan bahwa push ini men-deploy ke
+   **production**; minta konfirmasi dulu kecuali developer sudah memintanya
+   secara eksplisit.
+4. `git push origin <branch>` (tambahkan `-u` jika branch belum ada di remote).
+   **Jangan pernah force push.**
+5. Jika push ditolak karena remote lebih baru, berhenti dan jelaskan;
    jangan pull/rebase otomatis.
-5. Tampilkan rentang commit yang ter-push.
+6. Tampilkan rentang commit yang ter-push dan environment yang akan
+   ter-deploy (`development` → development, `main` → production).
 
 ## Sub-perintah yang tersedia
 
 | Perintah      | Fungsi                                      |
 | ------------- | ------------------------------------------- |
 | `/axl commit` | Commit semua perubahan dengan pesan konvensi |
-| `/axl push`   | Push branch `main` ke `origin`              |
+| `/axl push`   | Push `development` atau `main` ke `origin`  |

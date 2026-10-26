@@ -1,134 +1,170 @@
-# Rencana Deploy ke DigitalOcean (Docker)
+# Deploy ke DigitalOcean (App Platform + Docker)
 
-Status: **rencana, belum dikerjakan** (disusun 2026-10-24). Lanjutkan dari
-"Keputusan yang masih terbuka" di bawah.
+Status (2026-10-26): **Tahap 0 selesai** (kode siap). Yang di-deploy dulu
+hanya **backend (`apps/api`)**, ke dua environment: **development** dan
+**production**. Lanjutkan dari Tahap 1 (dikerjakan developer di dashboard).
 
 ## Keputusan yang sudah diambil
 
-- Frontend (`apps/web`, nanti `apps/admin`) dan backend (`apps/api`)
-  di-deploy ke **DigitalOcean**. **Tidak memakai Vercel.**
-- Setiap app dikemas sebagai **image Docker**.
-- Database: **DigitalOcean Managed PostgreSQL** (backup, update, dan SSL
-  diurus DO), region **Singapore (SGP1)**.
+- Semua app di-deploy ke **DigitalOcean** sebagai **image Docker**. **Tidak
+  memakai Vercel.**
+- Tempat menjalankan container: **App Platform** (PaaS; build, HTTPS, restart,
+  dan deploy otomatis tiap push diurus DO). Bukan Droplet.
+- Database: **satu cluster Managed PostgreSQL 17** bernama `ielts-db`, region
+  **Singapore (SGP1)**, berisi **dua database** dengan **user terpisah**:
 
-## Konteks penting
+  | Environment | Branch        | App Platform app         | Database                 | User DB             |
+  | ----------- | ------------- | ------------------------ | ------------------------ | ------------------- |
+  | development | `development` | `ielts-api-development`  | `ielts_mock_development` | `ielts_development` |
+  | production  | `main`        | `ielts-api-production`   | `ielts_mock`             | `ielts_production`  |
 
-- API saat ini **belum menyimpan data ke database**: tes & attempt masih
-  in-memory, hilang setiap restart/deploy ulang. Database baru dipakai untuk
-  `GET /health`. Tabel dibuat di Fase 2.
-- Jadi deploy sekarang = **staging / latihan pipeline**: membuktikan jalur
-  kode → image → server → database jalan, supaya setelah Fase 2 tinggal deploy.
-- API belum punya auth (Fase 3, WorkOS). Karena web hanya memanggil API dari
-  server (Server Component/Action), **API tidak perlu dibuka ke publik**:
-  cukup bisa diakses web lewat jaringan internal.
-- Di Mac developer belum ada Docker. Build image pertama bisa langsung di
-  DigitalOcean; untuk tes lokal perlu Docker Desktop atau OrbStack.
+  User development tidak bisa membuka database production (dan sebaliknya).
+- **Migrasi** dijalankan otomatis sebelum setiap deploy (pre-deploy job
+  `node dist/database/migrate.js`). Jika migrasi gagal, versi baru tidak live.
+- **Seed demo**: hanya development (dijalankan sekali, manual).
+- API diberi **route publik sementara** agar `/health` dan `/tests` bisa dicek
+  di browser. Dihapus saat `apps/web` di-deploy (web memanggil API lewat
+  jaringan internal). Aman untuk sementara: endpoint yang ada memang untuk
+  peserta anonim, dan `/admin/*` mati di luar `APP_ENV=local`.
 
-## Arsitektur target
+## Arsitektur
+
+Sekarang (backend saja):
 
 ```
-Internet ──HTTPS──▶ web (Next.js, container, port 3000)
+Internet ──HTTPS──▶ api (NestJS, App Platform, port 4000)  ← route publik sementara
+                        │  SSL (CA cluster)
+                        ▼
+                    Managed PostgreSQL "ielts-db" (SGP1)
+```
+
+Target (setelah web di-deploy):
+
+```
+Internet ──HTTPS──▶ web (Next.js, port 3000)
                         │  HTTP internal (API_URL)
                         ▼
-                    api (NestJS, container, port 4000) — tidak publik
+                    api (NestJS, port 4000) — tidak publik
                         │  SSL
                         ▼
-                    Managed PostgreSQL (SGP1)
+                    Managed PostgreSQL
 ```
 
-`apps/admin` nanti ditambahkan sebagai container ketiga dengan pola yang
-sama seperti web, **setelah login WorkOS ada**. Sebelum itu admin hanya
-dipakai di laptop (endpoint `/admin/*` mati jika `APP_ENV` bukan `local`).
+`apps/admin` baru di-deploy **setelah login WorkOS ada**. Sebelum itu admin
+hanya di laptop.
 
-## Pilihan tempat menjalankan container
+## File deploy di repo
 
-|             | **App Platform** (rekomendasi)                                | Droplet + Docker Compose                                          |
-| ----------- | ------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Apa itu     | PaaS: DO build & jalankan Dockerfile dari GitHub              | VPS Linux; container dijalankan sendiri dengan `docker compose`   |
-| Yang diurus | Hampir tidak ada: HTTPS, restart, deploy otomatis tiap push   | Instal Docker, reverse proxy + SSL (Caddy/Nginx), firewall, update OS, script deploy |
-| Web ↔ API   | Satu App berisi 2 komponen; API bisa dibuat internal-only     | Satu jaringan Docker; API tidak di-expose ke host                 |
-| Cocok untuk | Bukan orang backend/ops                                       | Mau belajar ops atau menekan biaya                                |
+| File                          | Fungsi                                                                 |
+| ----------------------------- | ---------------------------------------------------------------------- |
+| `apps/api/Dockerfile`         | Build multi-stage: `turbo prune` → `pnpm install` → build → `pnpm deploy --prod`. Image akhir: `dist` + dependency produksi, user non-root, `node dist/main`. |
+| `.dockerignore`               | `.env*`, `node_modules`, `dist`, `.next`, `.turbo`, `.git` tidak ikut ke image. |
+| `.do/api-development.yaml`    | App spec App Platform untuk development (branch `development`).       |
+| `.do/api-production.yaml`     | App spec untuk production (branch `main`).                             |
+| `apps/api/src/database/migrate.ts` | Menjalankan migrasi `packages/db/drizzle/` dengan setelan SSL API. |
+| `apps/api/src/database/seed.ts`    | Memasukkan tes demo ke database yang sudah di-deploy.            |
 
-Karena keduanya memakai Dockerfile yang sama, pindah dari satu ke yang lain
-nanti tidak perlu mengubah kode. Cek harga terbaru di situs DigitalOcean.
+App spec tidak berisi rahasia: `DATABASE_URL` dan `DATABASE_CA_CERT` diisi
+App Platform dari database yang di-attach (`${db.DATABASE_URL}`,
+`${db.CA_CERT}`). Jadi connection string tidak pernah ditulis atau ditempel
+di mana pun.
 
 ## Langkah-langkah
 
-### Tahap 0 — Siapkan kode (dikerjakan Claude)
-1. `apps/api/Dockerfile`: multi-stage, `turbo prune @ielts-mock/api --docker`,
-   Node 24, pnpm 12 via Corepack; image akhir hanya berisi `dist` +
-   dependency produksi, jalan sebagai user non-root.
-2. `apps/web/Dockerfile`: sama, dengan `turbo prune @ielts-mock/web`, dan
-   `output: "standalone"` di `apps/web/next.config.ts` agar image kecil.
-   `API_URL` dibaca saat runtime (bukan saat build), jadi satu image bisa
-   dipakai di staging maupun production.
-3. `.dockerignore` di root (tanpa `node_modules`, `.env*`, `dist`, `.next`,
-   `.turbo`).
-4. ✅ Dukungan SSL database (selesai 2026-10-24): `DATABASE_CA_CERT` di
-   `apps/api/src/config/env.ts`, logika di `src/database/pool-config.ts`.
-5. ✅ Pemisahan environment (selesai 2026-10-24): `APP_ENV`, template
-   `.env.<environment>.example`, validasi env web. Lihat `docs/environments.md`.
-6. (Opsional, untuk Droplet atau tes lokal) `docker-compose.yml`.
-7. Uji build image di lokal jika Docker tersedia.
+### Tahap 0 — Siapkan kode ✅ (selesai 2026-10-26)
+Dockerfile, `.dockerignore`, app spec, script migrate & seed, dukungan SSL
+database, pemisahan environment. Image belum pernah di-build dengan Docker
+(belum ada Docker di laptop). Langkah build sudah disimulasikan tanpa Docker
+dan API hasil `pnpm deploy` berhasil jalan. Build image pertama terjadi di DO.
 
-### Tahap 1 — Database (developer, lewat dashboard DO)
-1. Buat **Managed PostgreSQL** versi 17, region **SGP1**.
-2. Buat database `ielts_mock`.
-3. Simpan **connection string** dan unduh **CA certificate**. Jangan
-   ditempel ke chat atau di-commit.
+### Tahap 1 — Database (developer, dashboard DO)
+1. **Databases → Create Database Cluster**: PostgreSQL **17**, region
+   **Singapore (SGP1)**, plan terkecil, nama cluster **`ielts-db`** (harus
+   sama persis dengan `cluster_name` di app spec).
+2. Tab **Users & Databases**:
+   - Databases: buat `ielts_mock_development` dan `ielts_mock`.
+   - Users: buat `ielts_development` dan `ielts_production`.
+3. Atur hak akses (sekali saja). Ini butuh `psql` dari laptop sebagai user
+   `doadmin`:
+   - Tab **Network Access / Trusted Sources**: tambahkan IP laptop Anda
+     sementara.
+   - Tab **Overview → Connection details**: pilih user `doadmin`, database
+     `defaultdb`, lalu salin perintah `psql`. Jalankan di terminal Anda sendiri,
+     **jangan ditempel ke chat**.
+   - Jalankan:
+     ```sql
+     -- Each environment's user owns its own database (needed to create tables).
+     ALTER DATABASE ielts_mock_development OWNER TO ielts_development;
+     ALTER DATABASE ielts_mock OWNER TO ielts_production;
+     -- Nobody else may connect (the owner still can).
+     REVOKE CONNECT ON DATABASE ielts_mock_development FROM PUBLIC;
+     REVOKE CONNECT ON DATABASE ielts_mock FROM PUBLIC;
+     ```
+   - Hapus lagi IP laptop dari Trusted Sources setelah selesai.
 
-### Tahap 2a — App Platform (jika dipilih; developer, dipandu Claude)
-1. **Create App** → GitHub → repo `Modernsitechain/ielts`, branch `main`,
-   region SGP1.
-2. Komponen **api** (Dockerfile `apps/api/Dockerfile`):
-   - port `4000`, health check `/health`
-   - tanpa route publik (internal saja)
-   - env: `NODE_ENV=production`, `PORT=4000`, `DATABASE_URL` (Encrypt),
-     `DATABASE_CA_CERT` (Encrypt)
-3. Komponen **web** (Dockerfile `apps/web/Dockerfile`):
-   - port `3000`, route publik `/`
-   - env: `API_URL` = URL internal komponen api (App Platform menyediakan
-     variabel URL privat antar-komponen; cek nama tepatnya di dokumentasi DO)
-4. Database → **Trusted Sources**: tambahkan App ini.
-5. Deploy; pantau **Build Logs** & **Runtime Logs** tiap komponen.
+### Tahap 2 — Branch & GitHub
+1. Push branch `development` dan `main` ke GitHub (`/axl push`).
+2. Saat pertama kali membuat app, DO meminta akses GitHub: pasang
+   **DigitalOcean GitHub app** di akun `Modernsitechain` dan beri akses ke repo
+   `ielts`.
 
-### Tahap 2b — Droplet (jika dipilih)
-1. Buat Droplet Ubuntu LTS di SGP1, login dengan SSH key (bukan password).
-2. Instal Docker; aktifkan firewall (hanya port 22, 80, 443).
-3. `docker compose` menjalankan web, api, dan reverse proxy (Caddy, HTTPS
-   otomatis). API hanya di jaringan internal compose.
-4. Database → **Trusted Sources**: tambahkan Droplet ini.
-5. Deploy: GitHub Actions build image → push ke DigitalOcean Container
-   Registry → Droplet menarik image baru & restart.
+### Tahap 3 — Buat app development
+**Opsi A (disarankan): doctl.** App dibuat persis sesuai file spec.
+1. `brew install doctl`
+2. DO dashboard → **API → Generate New Token** (scope read + write). Jalankan
+   `doctl auth init` dan tempel token di terminal, **bukan di chat**.
+3. Dari root repo: `doctl apps create --spec .do/api-development.yaml`
 
-### Tahap 3 — Verifikasi
-- Buka web → halaman `/status`: Web, API, dan Database harus "Operational".
-- Katalog `/tests` tampil, mulai & submit tes berjalan.
-- Opsional: domain sendiri (`domainanda.com`) lewat DNS; HTTPS otomatis.
+**Opsi B: dashboard.**
+1. **Apps → Create App** → GitHub → repo `Modernsitechain/ielts`, branch
+   `development` → selesaikan wizard (pengaturan apa saja dulu).
+2. **Settings → App Spec → Edit**: ganti seluruh isinya dengan
+   `.do/api-development.yaml` → **Save**. App akan deploy ulang.
 
-### Tahap 4 — Setelahnya
-- GitHub Actions: typecheck & test harus lolos sebelum deploy (guardrail Fase 1).
-- **Migrasi database sudah ada** (`packages/db/drizzle/`), jadi deploy pertama
-  wajib menjalankan `pnpm db:migrate` (dan `pnpm db:seed` jika ingin tes
-  demo) ke database production sebelum API dipakai. Selanjutnya migrasi
-  dijalankan sebelum versi baru API aktif (App Platform: **pre-deploy job**;
-  Droplet: langkah di script deploy). Masih perlu diputuskan: menjalankan
-  migrasi dari container api (butuh drizzle-kit atau `migrate()` dari
-  drizzle-orm dengan CA database) atau dari GitHub Actions.
-- Tambahkan `apps/admin` sebagai container ketiga (Fase 3).
-- Pasang auth (Fase 3) sebelum app dibuka untuk umum.
+Lalu di cluster `ielts-db` → **Trusted Sources**: pastikan app
+`ielts-api-development` ada di daftar. Biasanya ditambahkan otomatis saat
+database di-attach.
 
-## Environment
+### Tahap 4 — Cek development
+1. Tab **Activity** / **Deployments**: build, lalu job `migrate` ("Migrations
+   applied."), lalu service `api`.
+2. Buka `https://<url-app>/health` → `{"status":"ok","database":"up"}`.
+3. Seed demo: komponen `api` → tab **Console** → `node dist/database/seed.js`
+   → "Seeded 2 demo tests."
+4. `https://<url-app>/tests` → dua tes demo. `/admin/tests` → 403 (benar:
+   admin mati di luar local).
+5. Gagal? Lihat **Build Logs**, **Deploy Logs**, dan **Runtime Logs**.
 
-Deploy pertama hanya **production** (branch `main`). Environment
-**development** (branch `development`) dibuat setelah aba-aba developer,
-dengan langkah yang sama tapi app & database terpisah (database
-`ielts_mock_development`). Variabel per environment: `docs/environments.md`.
+### Tahap 5 — Buat app production
+1. Merge `development` → `main`, lalu push `main`.
+2. `doctl apps create --spec .do/api-production.yaml` (atau Opsi B dengan
+   branch `main` dan file production).
+3. Cek seperti Tahap 4, **tanpa seed**. `/tests` akan berisi `[]`.
 
-## Keputusan yang masih terbuka
+## Setiap deploy berikutnya
 
-1. **App Platform atau Droplet?** Rekomendasi: App Platform.
-2. **Mulai Tahap 0?** Jika ya, Claude membuat Dockerfile web & api,
-   `.dockerignore`, `output: "standalone"`, dan dukungan SSL database, lalu
-   developer mengikuti Tahap 1–3.
-3. **Domain** yang akan dipakai (boleh menyusul).
+- Push ke `development` → deploy otomatis ke development.
+- Merge ke `main` + push → deploy otomatis ke production.
+- Mengubah file spec? Terapkan dengan
+  `doctl apps update <app-id> --spec .do/api-<env>.yaml` (ID: `doctl apps list`).
+  Mengubah spec di dashboard saja membuat file di repo tertinggal; selalu
+  perbarui file-nya juga.
+
+## Biaya
+
+Per environment: satu container `apps-s-1vcpu-0.5gb` (± US$5/bulan menurut
+dokumentasi DO saat ini) plus job migrasi yang jalan sebentar setiap deploy.
+Ditambah satu cluster database untuk keduanya. Cek harga terbaru di situs
+DigitalOcean.
+
+## Catatan & hal yang masih terbuka
+
+- **Konten production**: admin hanya jalan di laptop dan menulis ke database
+  lokal. Tes yang dibuat di admin **tidak otomatis ada di production**. Perlu
+  diputuskan sebelum launch: deploy admin (setelah WorkOS) atau cara
+  export/import konten.
+- Attempt masih disimpan di memori API: hilang setiap deploy/restart.
+- Sesudah backend: deploy `apps/web` (Dockerfile + `output: "standalone"`),
+  hapus route publik API, `API_URL` web = URL internal API.
+- GitHub Actions: typecheck & test harus lolos sebelum deploy.
+- Domain sendiri (boleh menyusul).

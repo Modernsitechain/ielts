@@ -8,9 +8,9 @@ environment variable. Rencana deploy: `docs/deployment.md`.
 | `APP_ENV`     | Sumber kode           | Tempat jalan          | Database                          | Status          |
 | ------------- | --------------------- | --------------------- | --------------------------------- | --------------- |
 | `local`       | working copy di laptop | laptop developer      | PostgreSQL lokal `ielts_mock`     | aktif           |
-| `development` | branch `development`  | DigitalOcean          | Managed PG `ielts_mock_development` | menunggu aba-aba |
+| `development` | branch `development`  | DigitalOcean          | Managed PG `ielts_mock_development` | api: siap deploy |
 | `staging`     | (belum ditentukan)    | DigitalOcean          | (belum ditentukan)                | nanti           |
-| `production`  | branch `main`         | DigitalOcean          | Managed PG `ielts_mock`           | deploy pertama  |
+| `production`  | branch `main`         | DigitalOcean          | Managed PG `ielts_mock`           | api: siap deploy |
 
 Test otomatis (`pnpm test`) memakai database lokal `ielts_mock_test`.
 
@@ -53,12 +53,14 @@ Persiapan sekali per terminal: `nvm use` di root repo (Node 24).
 
 ## Alur branch
 
-- **Sekarang:** semua pekerjaan langsung di `main`, sampai deploy pertama.
-- **Nanti (setelah aba-aba developer):** branch `development` dibuat dari
-  `main`; fitur dikerjakan di `development` (atau branch fitur yang di-merge
-  ke `development`); `development` → `main` saat siap rilis.
-- Push ke `development` → deploy ke environment development.
-  Push ke `main` → deploy ke production.
+Berlaku sejak 2026-10-26 (branch `development` dibuat atas aba-aba developer):
+
+- Pekerjaan sehari-hari di **`development`** (atau branch fitur yang di-merge
+  ke `development`). Jangan commit langsung ke `main`.
+- Rilis: merge `development` → `main`, lalu push `main`.
+- Push ke `development` → deploy otomatis ke environment development.
+  Push ke `main` → deploy otomatis ke production.
+- `/axl push` mendorong branch yang sedang aktif (`development` atau `main`).
 
 ## Environment variable
 
@@ -69,9 +71,14 @@ Persiapan sekali per terminal: `nvm use` di root repo (Node 24).
 | `NODE_ENV`         | (default `development`)        | `production`                   | `production`                   | –       |
 | `APP_ENV`          | `local`                        | `development`                  | `production`                   | –       |
 | `PORT`             | `4000`                         | `4000`                         | `4000`                         | –       |
-| `DATABASE_URL`     | `postgresql://USER@localhost:5432/ielts_mock` | URL Managed PG (`ielts_mock_development`) | URL Managed PG (`ielts_mock`) | ya |
-| `DATABASE_CA_CERT` | (kosong)                       | CA cluster (PEM/base64)        | CA cluster (PEM/base64)        | ya      |
+| `DATABASE_URL`     | `postgresql://USER@localhost:5432/ielts_mock` | `${db.DATABASE_URL}` (`ielts_mock_development`) | `${db.DATABASE_URL}` (`ielts_mock`) | ya |
+| `DATABASE_CA_CERT` | (kosong)                       | `${db.CA_CERT}`                | `${db.CA_CERT}`                | ya      |
 | `ADMIN_API_KEY`    | hasil `openssl rand -hex 32`   | (tidak di-set)                 | (tidak di-set)                 | ya      |
+
+Di App Platform, `${db.…}` diisi otomatis dari database yang di-attach di app
+spec (`.do/api-<environment>.yaml`), jadi nilainya tidak pernah ditulis
+manual. Env deploy lain (`APP_ENV`, `PORT`) juga ada di file spec itu;
+`NODE_ENV=production` diatur di Dockerfile.
 
 Catatan `DATABASE_URL` + `DATABASE_CA_CERT`: jika CA diisi, parameter SSL di
 URL (`sslmode=require`, dll.) otomatis dibuang dan koneksi memverifikasi
@@ -118,7 +125,7 @@ tetap jalan tanpa kunci.
 
 Aturan:
 
-- **Nilai development & production tidak pernah disimpan di file repo.**
+- **Nilai rahasia development & production tidak pernah disimpan di file repo.**
   Diisi di DigitalOcean (env var; yang rahasia ditandai Encrypt). File
   `.env.<environment>.example` hanya daftar variabel & nilai non-rahasia.
 - Jangan membuat `.env.development` / `.env.production` di laptop:
