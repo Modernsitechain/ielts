@@ -28,6 +28,17 @@ Backend: `apps/api/AGENTS.md`. Skema database: `packages/db/AGENTS.md`.
 - Belum ada: upload gambar/audio, preview sebagai peserta, tipe soal lain,
   riwayat perubahan (audit).
 
+## Layout
+
+- `AdminLayout`: sidebar kiri (brand, menu, akun di bawah) di layar besar;
+  di layar kecil menjadi bar atas dengan menu horizontal.
+- Menu ada di `shared/components/sidebar-nav.tsx` (`MAIN`). Menu "Coming
+  soon" (Users & roles, Media library, Payments) hanya penanda; pindahkan ke
+  `MAIN` saat halamannya dibuat.
+- Halaman memakai container `mx-auto max-w-6xl px-4 py-8 lg:px-8`.
+- User tanpa akses melihat "No access" tanpa sidebar (`AccessGate` membungkus
+  layout).
+
 ## Alur konten
 
 1. **New Reading test** → tes dibuat sebagai draft (`POST /admin/tests`).
@@ -49,18 +60,19 @@ Sama dengan `apps/web` (lihat `apps/web/AGENTS.md`): `app/` hanya routing,
 ```
 apps/admin/
 ├── proxy.ts                  # sesi WorkOS: semua halaman wajib login (kecuali /callback)
-├── app/                      # route: /, /tests/new, /tests/[testId], /callback (re-export saja)
+├── app/                      # route: / (dashboard), /tests, /tests/new, /tests/[testId], /callback
 ├── core/
 │   ├── config/env.ts         # getEnv(): APP_ENV, API_URL, variabel WorkOS (dibaca saat request pertama)
 │   ├── models/               # test.ts (tipe admin), user.ts (CurrentUser, ADMIN_APP_ROLES)
 │   └── services/             # api-client.ts (token WorkOS), test.service.ts, user.service.ts (GET /me)
 ├── feature/auth/             # AccessGate, AccountMenu, signOutAction, route /callback
+├── feature/dashboard/        # dashboard: ringkasan tes (stat card, terbaru, per skill)
 ├── feature/tests/
 │   ├── pages/                # tests-page, new-test-page, test-editor-page
 │   ├── components/           # test-editor → passage-editor → group-editor → question-editor
 │   ├── editor-defaults.ts    # nilai awal, instruksi standar, helper list immutable
 │   └── actions.ts            # Server Actions: create, save, publish, unpublish, delete
-└── shared/                   # admin-layout, form (Field, TextInput, Button…), status-badge, format
+└── shared/                   # admin-layout (sidebar), sidebar-nav, form, status-badge, format
 ```
 
 ## Aturan wajib

@@ -1,4 +1,4 @@
-// Always rendered per request: the test list comes from apps/api.
+// Always rendered per request: the recap comes from apps/api.
 export const dynamic = "force-dynamic";
 
-export { default } from "@/feature/tests/pages/tests-page";
+export { default } from "@/feature/dashboard/pages/dashboard-page";

@@ -20,9 +20,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={geistSans.variable}>
       <body className="font-sans text-slate-900 antialiased">
-        <AdminLayout account={<AccountMenu />}>
-          <AccessGate>{children}</AccessGate>
-        </AdminLayout>
+        {/* Outside the shell: users without access see no admin menu. */}
+        <AccessGate>
+          <AdminLayout account={<AccountMenu />}>{children}</AdminLayout>
+        </AccessGate>
       </body>
     </html>
   );

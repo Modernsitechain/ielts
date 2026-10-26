@@ -14,8 +14,8 @@ export async function AccessGate({ children }: { children: ReactNode }) {
   if (user && ADMIN_APP_ROLES.includes(user.role)) return children;
 
   return (
-    <section className="mx-auto w-full max-w-md px-4 py-20 text-center">
-      <ShieldAlert className="mx-auto h-10 w-10 text-amber-500" aria-hidden />
+    <section className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center px-4 text-center">
+      <ShieldAlert className="h-10 w-10 text-amber-500" aria-hidden />
       <h1 className="mt-4 text-xl font-semibold">No access</h1>
       <p className="mt-2 text-sm text-slate-600">
         {user

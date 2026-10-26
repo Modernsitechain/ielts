@@ -47,5 +47,5 @@ export async function unpublishTestAction(id: string): Promise<EditorActionResul
 export async function deleteTestAction(id: string): Promise<EditorActionResult> {
   const result = await deleteTest(id);
   if (!result.ok) return result;
-  redirect("/");
+  redirect("/tests");
 }

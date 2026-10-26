@@ -101,7 +101,7 @@ export function TestEditor({ initialTest }: { initialTest: AdminTest }) {
 
   return (
     <div className="space-y-4">
-      <div className="sticky top-14 z-30 -mx-4 flex flex-wrap items-center gap-3 border-b border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur-sm">
+      <div className="sticky top-0 z-30 -mx-4 flex flex-wrap items-center gap-3 border-b border-slate-200 bg-slate-50/95 px-4 py-3 lg:-mx-8 lg:px-8 backdrop-blur-sm">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h1 className="truncate text-xl font-bold">{test.title || "Untitled test"}</h1>

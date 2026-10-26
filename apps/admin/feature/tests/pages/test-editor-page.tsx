@@ -14,8 +14,8 @@ export default async function TestEditorPage({
   if (!test) notFound();
 
   return (
-    <section className="mx-auto w-full max-w-6xl space-y-4 px-4 py-6">
-      <Link href="/" className="text-sm text-slate-500 hover:text-slate-900">
+    <section className="mx-auto w-full max-w-6xl space-y-4 px-4 py-6 lg:px-8">
+      <Link href="/tests" className="text-sm text-slate-500 hover:text-slate-900">
         ← All tests
       </Link>
       <TestEditor key={test.id} initialTest={test} />
