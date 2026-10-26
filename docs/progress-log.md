@@ -7,12 +7,13 @@ Fase: 1 → sebagian Fase 2 & 3 (database konten + admin Reading) — minggu ke-
 sudah disusun di `docs/deployment.md`, belum dikerjakan. Mulai dari bagian "Keputusan yang
 perlu diambil" di file itu.
 
-**Deploy backend sedang disiapkan**: kode siap (Dockerfile, app spec
-`.do/`, migrasi otomatis). Developer lanjut dari Tahap 1 di
-`docs/deployment.md` (buat cluster database `ielts-db`). Kerja sekarang di
-branch `development`.
+**Deploy development**: database `ielts-db` siap, app lama
+`ielts-api-development` (api saja) jalan. Kode untuk app baru
+`ielts-development` (api + web + admin di balik password sementara) siap;
+lanjut dari Tahap 3 di `docs/deployment.md`, lalu hapus app lama. Kerja
+sekarang di branch `development`.
 
-**Admin Reading sudah jalan di lokal** (`apps/admin`, port 3001): buat tes,
+**Admin Reading sudah jalan** (`apps/admin`, http://localhost:3001/admin): buat tes,
 passage, group soal (7 tipe Reading), soal & jawaban, publish. Konten tes
 tersimpan di PostgreSQL (`packages/db`). Langkah berikut: developer mencoba
 admin, me-review skema tabel (`packages/db/AGENTS.md`), lalu commit. Setelah
@@ -31,8 +32,9 @@ catatan sesi 2026-10-24.
 - AI tooling: Claude Code (terminal, agent utama) + Antigravity (editor & review)
 - Database: PostgreSQL + Drizzle; development memakai PostgreSQL lokal
 - Auth: WorkOS (AuthKit). Sampai terpasang, endpoint admin dilindungi kunci
-  sementara `ADMIN_API_KEY` dan hanya aktif di `APP_ENV=local`; admin tidak
-  di-deploy sebelum WorkOS
+  sementara `ADMIN_API_KEY` dan hanya aktif di `APP_ENV=local`/`development`;
+  admin hanya di-deploy ke development, di balik password sementara (Basic
+  Auth); production tanpa admin sampai WorkOS
 - Commit message: `<type>: <ringkasan>` dalam bahasa Inggris; type hanya
   `feat` atau `fix`. Perintah `/axl commit` & `/axl push` di
   `.claude/skills/axl/SKILL.md`
@@ -42,10 +44,12 @@ catatan sesi 2026-10-24.
   (nanti), `production` (branch `main`), dibedakan dengan `APP_ENV`. Sejak
   2026-10-26 kerja di branch `development`; rilis = merge ke `main`. Detail:
   `docs/environments.md`
-- Deploy: App Platform (bukan Droplet); satu cluster Managed PostgreSQL
-  `ielts-db` dengan database & user terpisah per environment; migrasi sebagai
-  pre-deploy job; route publik API sementara sampai web di-deploy; seed demo
-  hanya di development
+- Deploy: App Platform (bukan Droplet); satu app per environment
+  (`ielts-development`: api + web + admin; `ielts-production`: api + web);
+  satu cluster Managed PostgreSQL 18 `ielts-db` dengan database & user terpisah
+  per environment; migrasi sebagai pre-deploy job; API privat (`http://api:4000`),
+  di development juga publik di `/api` untuk `pnpm dev:remote`; seed demo hanya
+  di development
 - Runtime: Node 24 LTS (`.nvmrc`); dibutuhkan Jest untuk NestJS 12 (ESM)
 - Admin: fokus Reading dulu. Passage disimpan sebagai daftar paragraf
   berlabel (A, B, C…). Tes published read-only (unpublish untuk edit); publish
@@ -149,6 +153,17 @@ catatan sesi 2026-10-24.
   `dist/database/migrate.js` (pre-deploy job) & `seed.js` di image API.
   `/axl push` kini mendorong `development` atau `main`. Image belum di-build
   dengan Docker (simulasi tahap build tanpa Docker berhasil).
+- [2026-10-26] Deploy development pertama (api saja): cluster `ielts-db`
+  (PostgreSQL 18, SGP1, 2 database + 2 user), app `ielts-api-development`
+  lewat doctl. Masalah: app dari doctl tidak otomatis masuk Trusted Sources
+  (migrasi timeout); `psql` dari laptop gagal karena Cloudflare WARP mengganti
+  IP. Perbaikan bug: riwayat attempt tidak lagi gagal jika tesnya sudah tidak
+  ada. Ditambahkan `pnpm dev:remote` (web lokal + API development).
+- [2026-10-26] Persiapan deploy web & admin: Dockerfile web/admin (Next.js
+  standalone), admin pindah ke `basePath: "/admin"` + password gate
+  (`proxy.ts`, Basic Auth) di luar local, guard API mengizinkan admin di
+  development, app spec baru `.do/development.yaml` (api + web + admin, satu
+  domain) dan `.do/production.yaml` (api privat + web).
 
 ## Yang masih bingung
 <!-- Tulis di sini, Claude akan menjelaskan ulang -->

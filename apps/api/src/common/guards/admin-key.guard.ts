@@ -13,6 +13,8 @@ import type { Request } from "express";
 import type { Env } from "../../config/env";
 
 const HEADER = "x-admin-key";
+/** Never production: the admin is only reachable there after WorkOS login exists. */
+const ALLOWED_ENVS: ReadonlySet<Env["APP_ENV"]> = new Set(["local", "development"]);
 
 function sha256(value: string): Buffer {
   return createHash("sha256").update(value).digest();
@@ -22,7 +24,8 @@ function sha256(value: string): Buffer {
  * TEMPORARY protection for /admin endpoints until WorkOS login and roles
  * (Phase 3) replace it with an auth guard + role guard.
  *
- * - Only works with APP_ENV=local: apps/admin is not deployed before WorkOS.
+ * - Only works with APP_ENV=local or development (where apps/admin is
+ *   deployed behind a temporary password); never in production.
  * - Disabled when ADMIN_API_KEY is unset.
  * - The request must send the same key in the x-admin-key header.
  */
@@ -32,7 +35,7 @@ export class AdminKeyGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const expected = this.config.get("ADMIN_API_KEY", { infer: true });
-    if (this.config.get("APP_ENV", { infer: true }) !== "local" || !expected) {
+    if (!ALLOWED_ENVS.has(this.config.get("APP_ENV", { infer: true })) || !expected) {
       throw new ForbiddenException("Admin endpoints are disabled in this environment");
     }
 

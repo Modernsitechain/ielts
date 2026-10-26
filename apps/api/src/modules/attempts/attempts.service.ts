@@ -142,16 +142,23 @@ export class AttemptsService {
     return grade(attempt, await this.requireTest(attempt.testId), attempt.submittedAt);
   }
 
-  /** Submitted attempts, newest first. */
+  /**
+   * Submitted attempts, newest first. Attempts whose test no longer exists
+   * (e.g. deleted in the admin) are left out instead of failing the list.
+   */
   async listSubmitted(): Promise<AttemptSummary[]> {
     const attempts = await this.attemptsRepository.findSubmitted();
     const summaries = await Promise.all(
       attempts.map(async (attempt) => {
-        const { items: _items, ...summary } = await this.getResult(attempt.id);
+        const test = await this.testsRepository.findById(attempt.testId);
+        if (!test || !attempt.submittedAt) return null;
+        const { items: _items, ...summary } = grade(attempt, test, attempt.submittedAt);
         return summary;
       }),
     );
-    return summaries.sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+    return summaries
+      .filter((summary) => summary !== null)
+      .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
   }
 
   private isPastDeadline(attempt: AttemptRecord): boolean {

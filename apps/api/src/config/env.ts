@@ -14,7 +14,8 @@ export const envSchema = z.object({
   DATABASE_CA_CERT: z.string().min(1).optional(),
   /**
    * Shared secret apps/admin sends in the x-admin-key header. Temporary until
-   * WorkOS login (Phase 3); admin endpoints are disabled when it is unset.
+   * WorkOS login (Phase 3); admin endpoints are disabled when it is unset and
+   * always in production.
    */
   ADMIN_API_KEY: z.string().min(32, "Use at least 32 characters (openssl rand -hex 32)").optional(),
 });

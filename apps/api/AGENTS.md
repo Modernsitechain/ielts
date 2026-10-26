@@ -86,7 +86,8 @@ apps/api/
 - **Hak akses dicek di API**, bukan di frontend: setiap endpoint non-publik
   wajib memakai guard auth + role. Sementara (sebelum WorkOS), `/admin/*`
   memakai `AdminKeyGuard`: header `x-admin-key` harus sama dengan
-  `ADMIN_API_KEY`, dan hanya aktif jika `APP_ENV=local`.
+  `ADMIN_API_KEY`, dan hanya aktif jika `APP_ENV=local` atau `development`
+  (tidak pernah production).
 - **Kunci jawaban tidak pernah dikirim** di response sebelum attempt di-submit.
   Pengecualian: endpoint `/admin/*` (untuk editor konten, dilindungi guard).
 - **Tes draft tidak pernah dikembalikan** endpoint peserta (`/tests`,

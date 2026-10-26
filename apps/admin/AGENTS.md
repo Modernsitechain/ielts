@@ -9,10 +9,17 @@ Backend: `apps/api/AGENTS.md`. Skema database: `packages/db/AGENTS.md`.
 
 ## Status sekarang (sementara)
 
-- **Hanya untuk lokal.** Belum ada login. API dilindungi kunci bersama
-  `ADMIN_API_KEY` (header `x-admin-key`), dan endpoint admin hanya aktif
-  dengan `APP_ENV=local`. **Jangan deploy admin** sebelum WorkOS + role
-  admin/editor terpasang (Fase 3).
+- **Lokal dan development saja**, belum ada login. Pengaman sementara sampai
+  WorkOS + role admin/editor (Fase 3):
+  - API: kunci bersama `ADMIN_API_KEY` (header `x-admin-key`); endpoint admin
+    hanya aktif dengan `APP_ENV=local` atau `development`.
+  - Admin di server: `proxy.ts` meminta username & password (HTTP Basic Auth)
+    untuk semua halaman jika `APP_ENV` bukan `local`.
+  - **Jangan deploy admin ke production** sebelum WorkOS.
+- Admin memakai `basePath: "/admin"`: semua URL diawali `/admin`, juga di
+  lokal (http://localhost:3001/admin; `/` dialihkan ke sana). Di server admin
+  berbagi domain dengan web (`<url>/admin`). `next/link` dan `redirect()`
+  menambahkan `/admin` otomatis; jangan menulis `/admin` sendiri di `href`.
 - Hanya tes **Reading** yang bisa dibuat dan diedit. Tes Listening tampil
   read-only.
 - Tipe soal: multiple choice (satu jawaban), True/False/Not Given,
@@ -41,6 +48,7 @@ Sama dengan `apps/web` (lihat `apps/web/AGENTS.md`): `app/` hanya routing,
 
 ```
 apps/admin/
+├── proxy.ts                  # SEMENTARA: password gate (Basic Auth) di luar local
 ├── app/                      # route: /, /tests/new, /tests/[testId] (re-export saja)
 ├── core/
 │   ├── config/env.ts         # getEnv(): APP_ENV, API_URL, ADMIN_API_KEY (dibaca saat request pertama)
@@ -77,6 +85,9 @@ apps/admin/
 2. Isi kunci yang sama di `apps/api/.env` dan `apps/admin/.env.local`
    (salin dari `.env.example`) sebagai `ADMIN_API_KEY=...`.
 3. Pastikan tabel sudah ada: `pnpm db:migrate` (dan `pnpm db:seed` untuk demo).
-4. `pnpm dev` dari root → admin di http://localhost:3001.
+4. `pnpm dev` dari root → admin di http://localhost:3001/admin.
+
+Deploy (development): `apps/admin/Dockerfile` + `.do/development.yaml`, lihat
+`docs/deployment.md`.
 
 Khusus app ini: `pnpm --filter @ielts-mock/admin <script>`.

@@ -137,4 +137,14 @@ describe("AttemptsService", () => {
     await expect(service.getResult(id)).rejects.toBeInstanceOf(NotFoundException);
     expect(await attempts.findById(id)).not.toBeNull();
   });
+
+  it("leaves attempts on missing tests out of the history", async () => {
+    // The repository's demo attempt points at reading-demo-1, which this fake doesn't have.
+    const { id } = await service.start(READING_TEST, "exam");
+    await service.submit(id, { "r1-q1": "TRUE" });
+
+    const history = await service.listSubmitted();
+
+    expect(history.map((summary) => summary.id)).toEqual([id]);
+  });
 });

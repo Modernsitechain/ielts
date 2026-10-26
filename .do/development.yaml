@@ -1,0 +1,149 @@
+# DigitalOcean App Platform spec: environment "development" (api + web + admin).
+# Deploys on every push to the `development` branch. Setup: docs/deployment.md.
+#   Create: see docs/deployment.md (secrets are filled in at creation time)
+#   Update: doctl apps update <app-id> --spec .do/development.yaml
+#
+# Secrets: values marked EV[...] are encrypted by App Platform and can only be
+# decrypted by this app, so they are safe to keep here. The database URL and CA
+# certificate are injected from the attached database (${db.…}).
+name: ielts-development
+region: sgp
+
+services:
+  - name: api
+    github:
+      repo: Modernsitechain/ielts
+      branch: development
+      deploy_on_push: true
+    source_dir: /
+    dockerfile_path: apps/api/Dockerfile
+    http_port: 4000
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    instance_count: 1
+    health_check:
+      http_path: /health
+    envs:
+      - key: APP_ENV
+        value: development
+        scope: RUN_TIME
+      - key: PORT
+        value: "4000"
+        scope: RUN_TIME
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+        scope: RUN_TIME
+      - key: DATABASE_CA_CERT
+        value: ${db.CA_CERT}
+        scope: RUN_TIME
+      - key: ADMIN_API_KEY
+        value: __ADMIN_API_KEY__
+        type: SECRET
+        scope: RUN_TIME
+
+  - name: web
+    github:
+      repo: Modernsitechain/ielts
+      branch: development
+      deploy_on_push: true
+    source_dir: /
+    dockerfile_path: apps/web/Dockerfile
+    http_port: 3000
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    instance_count: 1
+    health_check:
+      http_path: /
+    envs:
+      - key: APP_ENV
+        value: development
+        scope: RUN_TIME
+      # Private network inside the app: http://<component>:<port>.
+      - key: API_URL
+        value: http://api:4000
+        scope: RUN_TIME
+
+  - name: admin
+    github:
+      repo: Modernsitechain/ielts
+      branch: development
+      deploy_on_push: true
+    source_dir: /
+    dockerfile_path: apps/admin/Dockerfile
+    http_port: 3001
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    instance_count: 1
+    # No HTTP health check: every admin page is behind the password gate (401
+    # without it), so App Platform's default TCP check is used.
+    envs:
+      - key: APP_ENV
+        value: development
+        scope: RUN_TIME
+      - key: API_URL
+        value: http://api:4000
+        scope: RUN_TIME
+      - key: ADMIN_API_KEY
+        value: __ADMIN_API_KEY__
+        type: SECRET
+        scope: RUN_TIME
+      # TEMPORARY password gate until WorkOS login (apps/admin/proxy.ts).
+      - key: ADMIN_BASIC_AUTH_USER
+        value: admin
+        scope: RUN_TIME
+      - key: ADMIN_BASIC_AUTH_PASSWORD
+        value: __ADMIN_BASIC_AUTH_PASSWORD__
+        type: SECRET
+        scope: RUN_TIME
+
+jobs:
+  # Runs before each new version goes live; a failed migration stops the deploy.
+  - name: migrate
+    kind: PRE_DEPLOY
+    github:
+      repo: Modernsitechain/ielts
+      branch: development
+      deploy_on_push: true
+    source_dir: /
+    dockerfile_path: apps/api/Dockerfile
+    run_command: node dist/database/migrate.js
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    instance_count: 1
+    envs:
+      - key: APP_ENV
+        value: development
+        scope: RUN_TIME
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+        scope: RUN_TIME
+      - key: DATABASE_CA_CERT
+        value: ${db.CA_CERT}
+        scope: RUN_TIME
+
+databases:
+  # Existing Managed PostgreSQL cluster; one database and user per environment.
+  - name: db
+    engine: PG
+    production: true
+    cluster_name: ielts-db
+    db_name: ielts_mock_development
+    db_user: ielts_development
+
+# Most specific prefixes first.
+ingress:
+  rules:
+    # Development only: public API for `pnpm dev:remote` (prefix stripped,
+    # /api/health → /health). Production keeps the API private.
+    - component:
+        name: api
+      match:
+        path:
+          prefix: /api
+    - component:
+        name: admin
+        preserve_path_prefix: true
+      match:
+        path:
+          prefix: /admin
+    - component:
+        name: web
+      match:
+        path:
+          prefix: /
