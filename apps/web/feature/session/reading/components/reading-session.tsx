@@ -46,6 +46,8 @@ import { NoteEditor } from "../annotations/note-editor";
 import { NotesPanel } from "../annotations/notes-panel";
 import { ContextMenu, type MenuAction, type MenuPosition } from "../annotations/context-menu";
 import { clearSelection, highlightAt, readSelection } from "../annotations/selection";
+import { TEXT_SIZE_ZOOM, useExamSettings } from "../settings/exam-settings";
+import { SettingsMenu } from "../settings/settings-menu";
 import { Passage } from "./passage";
 import { QuestionGroupView } from "./question-group-view";
 import { type NavPart, QuestionNav } from "./question-nav";
@@ -108,6 +110,9 @@ export function ReadingSession({
   const [notesOpen, setNotesOpen] = useState(false);
   const [isSubmitting, startSubmit] = useTransition();
   const workspaceRef = useRef<HTMLDivElement>(null);
+  const [settings, setSettings] = useExamSettings();
+  // Text size scales the passage and questions (text, inputs and spacing).
+  const zoom = { zoom: TEXT_SIZE_ZOOM[settings.textSize] };
 
   // Text of every highlightable block, and the question each block belongs to
   // (paragraphs: the first question of their part), for notes and navigation.
@@ -339,7 +344,7 @@ export function ReadingSession({
   const paragraphLabels = (section.paragraphs ?? []).flatMap((p) => (p.label ? [p.label] : []));
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-screen flex-col" data-contrast={settings.contrast}>
       <header className="flex h-14 shrink-0 items-center gap-4 border-b border-slate-200 bg-white px-4">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white">
           <GraduationCap className="h-4.5 w-4.5" aria-hidden />
@@ -351,6 +356,7 @@ export function ReadingSession({
 
         <div className="ml-auto flex items-center gap-3">
           <SaveIndicator state={shownSaveState} />
+          <SettingsMenu settings={settings} onChange={setSettings} />
           <button
             type="button"
             onClick={() => setNotesOpen((open) => !open)}
@@ -391,30 +397,34 @@ export function ReadingSession({
           onContextMenu={openContextMenu}
         >
           <div className="overflow-y-auto border-r border-slate-200 bg-white px-8 py-8">
-            <Passage section={section} />
+            <div style={zoom}>
+              <Passage section={section} />
+            </div>
           </div>
-          <div className="space-y-8 overflow-y-auto bg-slate-50/60 px-6 py-8">
-            {section.groups.map((group) => (
-              <QuestionGroupView
-                key={group.id}
-                group={group}
-                paragraphLabels={paragraphLabels}
-                answers={answers}
-                currentNumber={currentNumber}
-                disabled={isSubmitting}
-                onAnswer={handleAnswer}
-                onFocusQuestion={setCurrentNumber}
-              />
-            ))}
+          <div className="overflow-y-auto bg-slate-50/60 px-6 py-8">
+            <div className="space-y-8" style={zoom}>
+              {section.groups.map((group) => (
+                <QuestionGroupView
+                  key={group.id}
+                  group={group}
+                  paragraphLabels={paragraphLabels}
+                  answers={answers}
+                  currentNumber={currentNumber}
+                  disabled={isSubmitting}
+                  onAnswer={handleAnswer}
+                  onFocusQuestion={setCurrentNumber}
+                />
+              ))}
+            </div>
           </div>
 
           {notesOpen && (
             <NotesPanel
-            notes={notes}
-            quoteOf={quoteOf}
-            onSelect={openNote}
-            onClose={() => setNotesOpen(false)}
-          />
+              notes={notes}
+              quoteOf={quoteOf}
+              onSelect={openNote}
+              onClose={() => setNotesOpen(false)}
+            />
           )}
         </div>
       </AnnotationsProvider>

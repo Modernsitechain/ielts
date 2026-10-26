@@ -145,6 +145,19 @@ Feature saat ini: `home`, `catalog`, `history`, `status`, `session`
 - Disimpan otomatis ke API (`PUT /attempts/:id/annotations`), 0,8 detik setelah
   perubahan terakhir, sama seperti jawaban.
 
+## Pengaturan tampilan ujian
+
+- `feature/session/reading/settings/`: tombol **Settings** di header ujian.
+  - Ukuran teks Standard / Large / Extra large: CSS `zoom` pada isi passage dan
+    soal (`TEXT_SIZE_ZOOM`). Jangan menambah kompensasi lebar: di Chrome versi
+    sekarang persen tidak ikut dikalikan zoom.
+  - Warna: Black on white, White on black, Yellow on black. Root sesi memberi
+    `data-contrast`; `app/globals.css` memetakan ulang variabel warna Tailwind
+    (`--color-slate-*`, `--color-white`, …). Warna baru di halaman ujian harus
+    memakai warna yang dipetakan di sana, atau ditambahkan ke daftar itu.
+  - Disimpan per browser (`localStorage`, lewat `useSyncExternalStore`), bukan
+    di server.
+
 ## Data & keamanan (wajib)
 
 - Web tidak pernah menerima kunci jawaban sebelum submit; API yang menjamin.

@@ -11,3 +11,54 @@
     linear-gradient(to bottom, rgb(15 23 42 / 0.06) 1px, transparent 1px);
   background-size: 48px 48px;
 }
+
+/*
+ * Exam colour settings (IELTS on computer). The exam session root sets
+ * data-contrast; Tailwind colours are CSS variables, so remapping them here
+ * recolours every utility inside it. Highlights stay yellow with black text.
+ */
+[data-contrast="white-on-black"],
+[data-contrast="yellow-on-black"] {
+  color-scheme: dark;
+  --color-white: #000;
+  --color-black: #fff;
+  --color-slate-50: #0a0a0a;
+  --color-slate-100: #1c1c1c;
+  --color-slate-200: #3d3d3d;
+  --color-slate-300: #5c5c5c;
+  --color-indigo-50: #1a1a40;
+  --color-indigo-200: #818cf8;
+  --color-indigo-400: #a5b4fc;
+  --color-indigo-500: #a5b4fc;
+  --color-yellow-100: #fef08a;
+  /* Text without its own colour class would otherwise inherit black from <body>. */
+  color: var(--color-slate-900);
+  background-color: var(--color-white);
+}
+
+[data-contrast="white-on-black"] {
+  --color-slate-400: #b3b3b3;
+  --color-slate-500: #cfcfcf;
+  --color-slate-600: #e0e0e0;
+  --color-slate-700: #ededed;
+  --color-slate-800: #f7f7f7;
+  --color-slate-900: #fff;
+}
+
+[data-contrast="yellow-on-black"] {
+  --color-slate-400: #a39030;
+  --color-slate-500: #d4bb3a;
+  --color-slate-600: #eed64a;
+  --color-slate-700: #fde047;
+  --color-slate-800: #fde047;
+  --color-slate-900: #facc15;
+}
+
+:is([data-contrast="white-on-black"], [data-contrast="yellow-on-black"]) :is(mark, blockquote) {
+  color: #000;
+}
+
+:is([data-contrast="white-on-black"], [data-contrast="yellow-on-black"]) :is(input, select, textarea) {
+  color: var(--color-slate-900);
+  background-color: var(--color-white);
+}

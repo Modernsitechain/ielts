@@ -266,6 +266,12 @@ Butuh langkah dari developer dulu (token). Detail CI: `docs/ci.md`.
   `PUT /attempts/:id/flags` (hanya id soal milik tes itu, sampai submit), web
   menyimpan otomatis seperti jawaban. Unit + e2e. Berikutnya: Tahap C (font &
   kontras).
+- [2026-10-27] Reading Tahap C: Settings di header ujian. Ukuran teks
+  (Standard/Large/Extra large, CSS `zoom` pada passage & soal) dan warna (Black
+  on white, White on black, Yellow on black, lewat pemetaan ulang variabel
+  warna Tailwind di `globals.css`). Disimpan di localStorage. Diuji visual di
+  Chrome headless; perbaikan: teks tanpa class warna mewarisi hitam dari
+  `<body>`. Berikutnya: Tahap D (polesan).
 
 ## Yang masih bingung
 <!-- Tulis di sini, Claude akan menjelaskan ulang -->
