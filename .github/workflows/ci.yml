@@ -1,0 +1,80 @@
+# Checks every push and pull request: lint, typecheck, unit tests, e2e tests
+# against a real PostgreSQL, and a production build. See docs/ci.md.
+name: CI
+
+on:
+  push:
+    branches: [development, main]
+  pull_request:
+
+# A newer push to the same branch cancels the older run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ielts_mock_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Read by apps/api (tests) and packages/db (migrations) instead of .env files.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ielts_mock_test
+      NEXT_TELEMETRY_DISABLED: 1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      # pnpm version comes from "packageManager" in package.json.
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Migrate the test database
+        run: pnpm db:migrate
+
+      - name: E2E tests (apps/api)
+        run: pnpm --filter @ielts-mock/api test:e2e
+
+      - name: Build
+        run: pnpm build

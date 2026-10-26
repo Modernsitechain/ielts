@@ -11,6 +11,7 @@ import * as schema from "./schema.js";
 const pool = new Pool({ connectionString: loadDatabaseUrl() });
 try {
   const count = await seedDemoTests(drizzle({ client: pool, schema }));
+  // eslint-disable-next-line no-console -- script output
   console.log(`Seeded ${count} demo tests.`);
 } finally {
   await pool.end();

@@ -36,7 +36,13 @@ export function PassageEditor({ section, passageNumber, startNumber, onChange, o
     setParagraphs([...section.paragraphs.filter((p) => p.text), ...pasted]);
   };
 
-  let groupStart = startNumber;
+  // First question number of each group, continuing from the previous group.
+  const groupStarts: number[] = [];
+  let nextNumber = startNumber;
+  for (const group of section.groups) {
+    groupStarts.push(nextNumber);
+    nextNumber += group.questions.length;
+  }
 
   return (
     <div className="space-y-4">
@@ -153,8 +159,7 @@ export function PassageEditor({ section, passageNumber, startNumber, onChange, o
       </div>
 
       {section.groups.map((group, index) => {
-        const firstNumber = groupStart;
-        groupStart += group.questions.length;
+        const firstNumber = groupStarts[index] ?? startNumber;
         return (
           <GroupEditor
             key={group.id}

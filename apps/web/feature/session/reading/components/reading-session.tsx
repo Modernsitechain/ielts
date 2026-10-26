@@ -64,9 +64,9 @@ export function ReadingSession({
   );
 
   // Autosave to the server once answers stop changing for a moment.
+  // ("saving" is set by handleAnswer, when the change happens.)
   useEffect(() => {
     if (answers === session.answers) return;
-    setSaveState("saving");
     const timeout = setTimeout(async () => {
       const ok = await saveAnswersAction(session.id, answers).catch(() => false);
       setSaveState(ok ? "saved" : "error");
@@ -103,6 +103,7 @@ export function ReadingSession({
 
   const handleAnswer = (questionId: string, value: string) => {
     setAnswers((previous) => ({ ...previous, [questionId]: value }));
+    setSaveState("saving");
   };
 
   const goToIndex = (index: number) => {

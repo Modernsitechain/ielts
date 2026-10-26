@@ -21,7 +21,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsc && node dist/seed.js",
     "db:set-role": "tsc && node dist/set-role.js",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@ielts-mock/question-schema": "workspace:*",
@@ -33,6 +34,7 @@
     "@types/node": "^26.6.5",
     "@types/pg": "^8.23.1",
     "drizzle-kit": "^0.31.11",
+    "eslint": "^10.13.0",
     "typescript": "^6.0.3"
   }
 }

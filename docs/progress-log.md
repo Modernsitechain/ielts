@@ -96,6 +96,22 @@ Catatan teknis:
 - Perlu diputuskan: apakah editor boleh melihat data peserta (email), atau
   hanya admin (data pribadi).
 
+## Backlog: deploy hanya jika CI hijau (ditunda, 2026-10-27)
+
+Sekarang CI hanya **memberi tahu** (✓/✗ di GitHub), belum **memblokir** deploy:
+App Platform tetap men-deploy setiap push ke `development`/`main`, walaupun CI
+merah. Supaya deploy menunggu CI:
+
+1. **Developer:** buat token DigitalOcean (DO → API → Generate New Token) dan
+   simpan sebagai secret di GitHub (repo → Settings → Secrets and variables →
+   Actions), misalnya `DIGITALOCEAN_ACCESS_TOKEN`.
+2. **Claude:** tambah job deploy di `.github/workflows/ci.yml` yang jalan
+   setelah semua cek lolos, matikan `deploy_on_push` di `.do/*.yaml`, dan
+   sekalian deploy hanya app yang berubah (image ke DigitalOcean Container
+   Registry).
+
+Butuh langkah dari developer dulu (token). Detail CI: `docs/ci.md`.
+
 ## Catatan per sesi
 <!-- Format: [tanggal] apa yang dikerjakan / dipelajari -->
 - [YYYY-MM-DD] Menyusun roadmap, project brief, dan domain knowledge
@@ -227,6 +243,13 @@ Catatan teknis:
   Unit test memakai repository palsu; e2e baru membuktikan data tetap ada
   setelah API di-restart. Belum: daftar attempt "sedang dikerjakan",
   menyelesaikan otomatis attempt yang lewat deadline.
+- [2026-10-27] Guardrail: ESLint 10 di kelima package (config bersama
+  `packages/config/eslint/`, TypeScript 6 untuk parser karena TS 7 tanpa JS
+  API, opsi decorator untuk DI NestJS) dan CI GitHub Actions (lint, typecheck,
+  unit, migrasi, e2e dengan PostgreSQL 17, build). Lint menemukan 2 bug React:
+  setState di dalam effect (autosave web) dan variabel diubah saat render
+  (nomor grup di editor admin); keduanya diperbaiki. Belum: deploy hanya jika
+  CI hijau. Detail: `docs/ci.md`.
 
 ## Yang masih bingung
 <!-- Tulis di sini, Claude akan menjelaskan ulang -->

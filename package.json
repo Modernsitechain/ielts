@@ -10,6 +10,7 @@
     "dev:remote": "API_URL=https://ielts-development-9acd2.ondigitalocean.app/api turbo run dev --filter=@ielts-mock/web",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
     "test": "turbo run test",
     "start": "turbo run start",
     "db:generate": "pnpm --filter @ielts-mock/db db:generate",

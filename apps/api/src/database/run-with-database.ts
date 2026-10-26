@@ -13,6 +13,7 @@ export async function runWithDatabase(task: (db: Database) => Promise<string>): 
   const env = validateEnv(process.env);
   const pool = new Pool(buildPoolConfig(env.DATABASE_URL, env.DATABASE_CA_CERT));
   try {
+    // eslint-disable-next-line no-console -- script output
     console.log(await task(drizzle({ client: pool, schema })));
   } catch (error) {
     console.error(error);

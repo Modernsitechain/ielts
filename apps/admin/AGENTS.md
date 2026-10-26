@@ -108,4 +108,5 @@ apps/admin/
 Deploy (development): `apps/admin/Dockerfile` + `.do/development.yaml`, lihat
 `docs/deployment.md`.
 
-Khusus app ini: `pnpm --filter @ielts-mock/admin <script>`.
+Khusus app ini: `pnpm --filter @ielts-mock/admin <script>` (`dev`, `build`,
+`lint`, `typecheck`). CI: `docs/ci.md`.

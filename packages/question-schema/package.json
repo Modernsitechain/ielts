@@ -16,13 +16,15 @@
     "build": "tsc",
     "dev": "tsc --watch --preserveWatchOutput",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "eslint ."
   },
   "dependencies": {
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@ielts-mock/config": "workspace:*",
+    "eslint": "^10.13.0",
     "typescript": "^6.0.3",
     "vitest": "^5.0.5"
   }

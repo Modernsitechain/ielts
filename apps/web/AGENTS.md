@@ -202,11 +202,12 @@ IntelliSense di editor.
    `packages/question-schema` (re-export di `core/models`), lalu fungsi di
    `core/services/<domain>.service.ts`.
 3. Buat route di `app/(site)/...` atau `app/(exam)/...` berisi re-export.
-4. Jalankan `pnpm typecheck` dan `pnpm build` dari root repo.
+4. Jalankan `pnpm lint`, `pnpm typecheck`, dan `pnpm build` dari root repo
+   (CI menjalankan semuanya, lihat `docs/ci.md`).
 
 ## Perintah
 
-Dari root repo: `pnpm dev` (web + api + package), `pnpm build`, `pnpm typecheck`,
+Dari root repo: `pnpm dev` (web + api + package), `pnpm build`, `pnpm lint`, `pnpm typecheck`,
 `pnpm test`. Butuh Node 24.9+ (`nvm use` di root repo). Cek koneksi ke API &
 database di halaman `/status`.
 Khusus app ini: `pnpm --filter @ielts-mock/web <script>`.

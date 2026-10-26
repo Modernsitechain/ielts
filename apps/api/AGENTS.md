@@ -128,7 +128,9 @@ apps/api/
 2. Daftarkan module di `src/app.module.ts`.
 3. Tulis unit test untuk service (repository di-mock); e2e untuk alur
    endpoint utama.
-4. Jalankan `pnpm typecheck`, `pnpm test`, dan `pnpm build` dari root.
+4. Jalankan `pnpm lint`, `pnpm typecheck`, `pnpm test`, dan `pnpm build` dari
+   root (CI menjalankan semuanya, lihat `docs/ci.md`). Jangan mengubah import
+   tipe constructor menjadi `import type`: dependency injection butuh nilainya.
 
 ## Environment & menjalankan
 
@@ -142,7 +144,7 @@ apps/api/
   semua env var dijelaskan di `docs/environments.md`. Nilai development &
   production disimpan di DigitalOcean, bukan di file.
 - Perintah (dari folder ini): `pnpm dev` (watch, port 4000), `pnpm build`,
-  `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`.
+  `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`.
 - Deploy: `Dockerfile` di folder ini (build dari root repo), app spec di
   `.do/`. Langkah lengkap: `docs/deployment.md`.
 - TypeScript 6 dipakai di app ini (sesuai template resmi NestJS 12), bukan

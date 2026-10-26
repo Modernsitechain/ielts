@@ -12,6 +12,7 @@ const { email, role } = parseSetRoleArgs(process.argv.slice(2));
 const pool = new Pool({ connectionString: loadDatabaseUrl() });
 try {
   const found = await setUserRole(drizzle({ client: pool, schema }), email, role);
+  // eslint-disable-next-line no-console -- script output
   console.log(found ? `${email} is now ${role}.` : `No user with email ${email}. Sign in once first.`);
   if (!found) process.exitCode = 1;
 } finally {
