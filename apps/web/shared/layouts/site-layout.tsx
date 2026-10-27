@@ -5,6 +5,14 @@ import type { ReactNode } from "react";
 import { AccountMenu } from "@/feature/auth/components/account-menu";
 import { Logo } from "@/shared/components/logo";
 
+const FOOTER_LINKS = [
+  { href: "/pricing", label: "Pricing" },
+  { href: "/terms", label: "Terms" },
+  { href: "/privacy", label: "Privacy" },
+  { href: "/refund-policy", label: "Refunds" },
+  { href: "/contact", label: "Contact" },
+];
+
 /**
  * Layout for general pages: sticky navigation header + disclaimer footer.
  * Pages own their width, so landing sections can span the full screen.
@@ -21,6 +29,9 @@ export function SiteLayout({ children }: { children: ReactNode }) {
             </Link>
             <Link href="/history" className="transition-colors hover:text-slate-900">
               History
+            </Link>
+            <Link href="/pricing" className="transition-colors hover:text-slate-900">
+              Pricing
             </Link>
           </div>
           <div className="ml-auto flex items-center gap-4">
@@ -39,12 +50,22 @@ export function SiteLayout({ children }: { children: ReactNode }) {
       <main className="flex-1">{children}</main>
 
       <footer className="border-t border-slate-200 bg-slate-50">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-10 sm:flex-row sm:items-start sm:justify-between">
-          <Logo />
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-4">
+            <Logo />
+            <nav aria-label="Legal" className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600">
+              {FOOTER_LINKS.map((link) => (
+                <Link key={link.href} href={link.href} className="hover:text-slate-900">
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
           <p className="max-w-xl text-xs leading-relaxed text-slate-500">
-            IELTS is a registered trademark of its respective owners. This product
-            is not affiliated with IELTS, the British Council, IDP or Cambridge, and
-            does not use official test material.
+            IELTS is a registered trademark of the British Council, IDP: IELTS
+            Australia and Cambridge University Press &amp; Assessment. This product
+            is independent, not affiliated with or endorsed by them, and does not
+            use official test material.
           </p>
         </div>
       </footer>

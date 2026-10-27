@@ -75,7 +75,8 @@ apps/web/
 
 ### `feature/<nama>/` — satu folder per fitur
 Feature saat ini: `home`, `catalog`, `history`, `status`, `session`
-(sub: `reading`, `listening`), `auth`.
+(sub: `reading`, `listening`), `auth`, `info` (pricing, terms, privacy,
+refund policy, contact; data bisnis di `feature/info/business.ts`).
 
 - `pages/`: satu file per halaman, `export default`, nama `<nama>-page.tsx`.
   Biasanya Server Component yang mengambil data dari `core/services`.
@@ -115,8 +116,8 @@ Feature saat ini: `home`, `catalog`, `history`, `status`, `session`
   `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`,
   `NEXT_PUBLIC_WORKOS_REDIRECT_URI`. **Tidak ada `WORKOS_API_KEY` di web.**
 - `proxy.ts`: semua halaman wajib login **kecuali** yang ada di
-  `PUBLIC_PATHS` (`/`, `/tests`, `/tests/*`, `/status`, `/sign-in`,
-  `/callback`). Halaman publik baru wajib ditambahkan ke daftar itu.
+  `PUBLIC_PATHS` (`/`, `/tests`, `/tests/*`, halaman `info`, `/status`,
+  `/sign-in`, `/callback`). Halaman publik baru wajib ditambahkan ke daftar itu.
 - Route: `/sign-in?returnTo=/path` (mulai login; tautkan dengan `<a>`, bukan
   `next/link`), `/callback` (WorkOS mengembalikan user ke sini). Sign out:
   `signOutAction` di `feature/auth/actions.ts`.
@@ -221,6 +222,10 @@ IntelliSense di editor.
 - Utamakan skala bawaan daripada arbitrary value: `rounded-4xl` bukan
   `rounded-[2rem]`, `w-160` bukan `w-[40rem]`, `h-4.5` bukan `h-[18px]`.
   Arbitrary value (`text-[15px]`) hanya jika tidak ada padanannya.
+- **Gaya hilang di `pnpm dev` setelah menambah file baru?** Turbopack +
+  Tailwind v4 kadang belum membuat ulang CSS untuk class dari file baru.
+  Hard refresh (`Cmd + Shift + R`), atau restart `pnpm dev`. Build production
+  tidak terpengaruh. Cek dulu ini sebelum mengira layout-nya salah.
 - Variant v4 yang boleh dipakai: `has-checked:`, `not-*:`, `inert:`, dll.;
   ukuran shadow `shadow-xs`; gradient `bg-linear-*`, `bg-radial`, `bg-conic`.
 

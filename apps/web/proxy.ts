@@ -7,7 +7,19 @@ import { getAuthEnv } from "@/core/config/auth";
 // and sends signed-out visitors of private pages to sign in. Pages not listed
 // here (history, exam sessions) need a signed-in user. The API checks the
 // token again: this only decides where to send people.
-const PUBLIC_PATHS = ["/", "/tests", "/tests/:path*", "/status", "/sign-in", "/callback"];
+const PUBLIC_PATHS = [
+  "/",
+  "/tests",
+  "/tests/:path*",
+  "/pricing",
+  "/terms",
+  "/privacy",
+  "/refund-policy",
+  "/contact",
+  "/status",
+  "/sign-in",
+  "/callback",
+];
 
 const authkit = authkitProxy({
   middlewareAuth: { enabled: true, unauthenticatedPaths: PUBLIC_PATHS },

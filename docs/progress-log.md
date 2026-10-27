@@ -1,6 +1,7 @@
 # Progress Log
 
 ## Status saat ini
+
 Fase: 1 → sebagian Fase 2 & 3 (database konten + admin Reading) — minggu ke-1
 
 **Lanjut dari sini:** rencana deploy web & api ke DigitalOcean (Docker)
@@ -31,6 +32,7 @@ constraint, dan JSONB. Listening & audio ditunda; rekomendasi audio ada di
 catatan sesi 2026-10-24.
 
 ## Keputusan yang sudah diambil
+
 - Produk: SaaS mock test IELTS Reading & Listening (lihat project-brief.md)
 - Struktur: monorepo Turborepo + pnpm, 3 app: `apps/web` & `apps/admin`
   (Next.js, frontend murni) + `apps/api` (backend, satu-satunya akses database)
@@ -70,6 +72,7 @@ catatan sesi 2026-10-24.
   dalam bahasa Indonesia. Dokumen di `docs/` tetap berbahasa Indonesia.
 
 ## Keputusan yang belum diambil
+
 - Storage audio & gambar (sebelumnya Supabase Storage; kandidat: Cloudflare R2)
 - Harga & durasi paket
 - Cara konten buatan admin (lokal) sampai ke production: deploy admin setelah
@@ -89,6 +92,7 @@ Arah admin: **pusat rekap**, bukan hanya editor konten.
      dan bisa dibuka untuk melihat detail jawaban.
 
 Catatan teknis:
+
 - Datanya sudah ada di tabel `attempts` + `attempt_answers` + `users`
   (sejak 2026-10-27).
 - Butuh endpoint baru di API, misalnya `GET /admin/attempts` (filter per tes,
@@ -112,8 +116,35 @@ merah. Supaya deploy menunggu CI:
 
 Butuh langkah dari developer dulu (token). Detail CI: `docs/ci.md`.
 
+## Halaman legal (draf, 2026-10-27): yang harus dilengkapi sebelum pembayaran live
+
+Halaman: `/pricing`, `/terms`, `/privacy`, `/refund-policy`, `/contact`
+(`apps/web/feature/info/`). Semua nilai ada di
+`apps/web/feature/info/business.ts`:
+
+- [x] Pengelola: **Modernsitechain** — `operatorName`. Selama belum badan
+      usaha terdaftar, tambahkan nama lengkap pemilik ("Modernsitechain,
+      operated by …"); di Midtrans daftar sebagai perorangan dengan Business
+      Name "Modernsitechain"
+- [x] Email support, WhatsApp, alamat — modernsitechain@gmail.com,
+      +62 896-3895-9321, "30287 Bandung, Indonesia" (kode pos perlu dicek:
+      kode pos Bandung umumnya 40xxx; alamat lengkap/jalan belum ada)
+- [ ] Harga paket 30 & 90 hari — `PACKAGES[].priceIdr` (sekarang "Price to be announced")
+- [ ] Aturan refund: masa refund (draf 7 hari, hanya jika belum ada tes berbayar
+      yang dimulai) dan lama proses (draf 14 hari kerja)
+- [ ] Review teks Terms, Privacy (UU PDP 27/2022), dan Refund oleh orang yang
+      paham hukum
+- [x] Tanggal berlaku — 30 October 2026 (`policiesUpdated`)
+- [ ] Nama produk & domain **tanpa kata "IELTS"**: IELTS merek terdaftar
+      (British Council, IDP, Cambridge; kelas jasa pendidikan) dan pemiliknya
+      pernah menggugat domain berisi "IELTS" (WIPO D2021-3122). "IELTS" hanya
+      dipakai deskriptif ("mock tests for IELTS Academic…") + disclaimer
+      (sudah menyebut ketiga pemilik). "IELTS Mock" = nama kerja sementara.
+
 ## Catatan per sesi
+
 <!-- Format: [tanggal] apa yang dikerjakan / dipelajari -->
+
 - [YYYY-MM-DD] Menyusun roadmap, project brief, dan domain knowledge
 - [2026-10-24] Merencanakan setup monorepo. Rencana awal (hanya web & admin)
   dibatalkan karena tidak sesuai docs yang mensyaratkan `apps/api`.
@@ -276,13 +307,21 @@ Butuh langkah dari developer dulu (token). Detail CI: `docs/ci.md`.
   mouse atau keyboard, disimpan di pengaturan), peringatan sisa waktu 10 & 5
   menit, konfirmasi saat menutup/refresh halaman di tengah ujian, tombol Help.
   Tahap A–D Reading selesai.
+- [2026-10-27] Halaman wajib untuk payment gateway (draf, bahasa Inggris):
+  Pricing (paket gratis/30/90 hari, metode bayar Midtrans, tombol beli "Coming
+  soon"), Terms & Conditions, Privacy Policy (mengacu UU PDP, menyebut WorkOS,
+  Midtrans, DigitalOcean Singapura), Refund Policy, Contact. Data bisnis
+  terpusat di `feature/info/business.ts` dengan placeholder; tautan di footer
+  dan menu Pricing di header; semua halaman publik (tanpa login).
 
 ## Yang masih bingung
-<!-- Tulis di sini, Claude akan menjelaskan ulang -->
--
+
+## <!-- Tulis di sini, Claude akan menjelaskan ulang -->
 
 ## Kesalahan AI yang berulang (bahan untuk file aturan)
+
 <!-- Contoh: AI masih pakai `any` di handler webhook -->
+
 - Menulis class Tailwind dengan kebiasaan v3 / class yang saling konflik
   (lihat aturan Tailwind v4 di `apps/web/AGENTS.md`)
 - Menyusun rencana tanpa membaca `docs/` lebih dulu → rencana melenceng
