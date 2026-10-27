@@ -313,6 +313,10 @@ Halaman: `/pricing`, `/terms`, `/privacy`, `/refund-policy`, `/contact`
   Midtrans, DigitalOcean Singapura), Refund Policy, Contact. Data bisnis
   terpusat di `feature/info/business.ts` dengan placeholder; tautan di footer
   dan menu Pricing di header; semua halaman publik (tanpa login).
+- [2026-10-27] CI merah pertama: race condition di e2e (dua file mengisi tes
+  demo bersamaan di database CI yang kosong → `duplicate key`). Run sebelumnya
+  lolos karena kebetulan. Perbaikan: e2e berurutan (`--runInBand`); diuji 5x
+  dengan data demo kosong.
 
 ## Yang masih bingung
 

@@ -16,6 +16,10 @@ Actions (Ubuntu, Node dari `.nvmrc`, PostgreSQL 17 sebagai service):
 | E2E            | `pnpm --filter @ielts-mock/api test:e2e`   | alur API terhadap database nyata gagal        |
 | Build          | `pnpm build`                               | ketiga app tidak bisa di-build                |
 
+E2E dijalankan **berurutan** (`--runInBand` di script `test:e2e`): semua file
+e2e memakai satu database, dan menjalankannya paralel pernah membuat CI merah
+(dua file mengisi tes demo bersamaan → `duplicate key` pada `sections_pkey`).
+
 CI tidak memakai rahasia: database-nya sementara (`ci:ci`), dan WorkOS dipalsukan
 di e2e (`apps/api/test/auth-helpers.ts`). Hasil: tab **Actions** di GitHub, atau
 tanda ✓/✗ di samping commit.

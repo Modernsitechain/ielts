@@ -119,7 +119,8 @@ apps/api/
 - Nama route: kata benda jamak, kebab-case (`/tests`, `/attempts/:id/submit`).
 - Import relatif (`./`, `../`), tanpa alias path.
 - Unit test (`*.spec.ts`) di sebelah file yang dites; e2e di `test/`.
-  Unit test me-mock dependensi; e2e memakai database `ielts_mock_test`.
+  Unit test me-mock dependensi; e2e memakai database `ielts_mock_test` dan
+  berjalan berurutan (`--runInBand`), karena semua file e2e berbagi database.
 
 ## Menambah fitur baru
 
